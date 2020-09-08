@@ -28,28 +28,42 @@ try:
 except IndexError:
     print('not 2 saves')
 
-print(x1)
-# Instance of Window with necessary info to find screenshot, translated into
-# a np array form
-wincap = WindowCapture('EscapeFromTarkov')
-TarkovScreen = wincap.get_screenshot()
+# Assuming whole number of squares on top-side
+# Bounds in MainStash
+#CLICKED 1266 77
+#CLICKED 1896 935
 
-# Matching algorithm is run on object,
-start_time = time.time()
-FiR = Detect(TarkovScreen, fir, 0.8)
-print("--- %s seconds ---" % (time.time() - start_time))
+#CLICKED 1266 115 - 62/63
+#CLICKED 1328 178 - 63/62
+#CLICKED 1391 240 - 63/64
+#CLICKED 1454 304 - 63/63
+#CLICKED 1517 367 - 64/63
+#CLICKED 1581 430
+
+stashWidth = 4
+stashHeight = 4
+
+wincap =  WindowCapture('EscapeFromTarkov')
+TarkovScreenN = wincap.get_screenshot()
+stashBoundry = TarkovScreenN[77:77+63*stashHeight, 1264:1264+63*stashWidth]
+cv.imshow('mainStash', stashBoundry)
+# Calculate x,y pos of items within the boundries
+
+# Instance of Window in np array form, matching algorithm is run on it
+wincap = WindowCapture('EscapeFromTarkov')
+TarkovScreen1 = wincap.get_screenshot()
+FiR = Detect(TarkovScreen1, fir, 0.8)
 print(FiR)
-print('Calculated things:')
 
-# Creating fresh screencap
+# Creating another screencap
 wincap = WindowCapture('EscapeFromTarkov')
-freshCap = wincap.get_screenshot()
+TarkovScreen2 = wincap.get_screenshot()
 
 # Creating template for each FiR item
 # Create dictionary of { ((FiR(x,y);screencap), ...((x,y);cap) )
 FiRdict = {}
 for item in FiR:
-    template = freshCap[(item[1] - 35):(item[1] + 16), (item[0] - 48):(item[0] + 16)]
+    template = TarkovScreen2[(item[1] - 35):(item[1] + 16), (item[0] - 48):(item[0] + 16)]
     FiRdict.update({item: template})
 
 # Instantiating/Initializing stuff
@@ -64,12 +78,22 @@ pygame.display.set_caption('Mistakes were made')
 pygame.mouse.set_visible(1)
 clock = pygame.time.Clock()
 
-# Why is this going to the wrong place?
-# Didn't go to next FiRItem, went there with left offset and up offset
-# failing on - GetValue(), line 72: Matches[i[.append(matchObject)
-#  ---- doesn't click 'add offer' ---- Matches global/local scope issue - Solved with class, but why global issues?
-# How can the location FiRItem change?
+# Sometimes goes to wrong FiRitem - Why?
 # How can matchObject distinguish between different objects of the same template? Will this cause issues?
+# - Can define bounds for FiRitems to be found, search for that bounded area within the stash
+# - Allow user to drag a boundry
+
+def Menu():
+    # Waits for user inputs to select certain variables, here FiRItems dictionary generated
+    # and a stash boundry template is generated
+    pass
+    Awaiting = True
+    while Awaiting:
+        clock.tick(60)
+        break
+
+    pass
+
 def Main():
     # Need object to act on
     A = Movement()
@@ -120,7 +144,6 @@ def Main():
                 break
 
         # Moving to FiR item, open 'filter by item', click 'add offer'
-        print(bool(Awaiting))
         if Awaiting == False:
             pyautogui.moveTo(FiRItem[0], FiRItem[1], 2)
             pyautogui.click(button='right')
@@ -204,7 +227,7 @@ def Main():
 
         count += 1
 
-
+Menu()
 Main()
 
 ' TO DO '

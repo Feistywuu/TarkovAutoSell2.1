@@ -24,9 +24,6 @@ def load_image(name, colorkey=None):
     return image
 
 
-# by having functions return self.surf, rather than changes the attributes on an
-# instance, it's like acting on global variable instead. the functions just 'act'
-# but not on a specific thing.
 # Interface object Class
 class guiobject():
 
