@@ -95,28 +95,34 @@ def GetValue():
     for row in Matches:
         print('totalValue: ' + str(row))
 
+
 def Drag(x, y, currentItem):
     pyautogui.moveTo(x, y, )
     pyautogui.drag(0, 150, 1, button='left')
     print('Dragged')
     cap = WindowCapture('EscapeFromTarkov')
     stashScreenCap = cap.get_screenshot()
-    stashScreen = stashScreenCap[204:931, 408:1039]
+    stashScreen = stashScreenCap[54:1086, 258:1189]
     cv.imshow('test', stashScreen)
-    XX = Detect(stashScreen, currentItem, 0.70)
+    XX = Detect(stashScreen, currentItem, 0.85)
+    print(XX)
     return XX
 
 
 def LocateStashItem(x, y, currentItem):
-    preDrag = Drag(x, y, currentItem)
+    firstDrag = Drag(x, y, currentItem)
 
-    for i in range(1, 20):
-        if preDrag == []:
+    for i in range(2, 20):
+
+        if firstDrag == []:
             dragY = Drag(x, y + 150 * i, currentItem)
 
             if dragY != []:
                 return dragY
-                break
+
+        if firstDrag != []:
+            return firstDrag
+
 
 def initAndClear():
     '''

@@ -59,7 +59,7 @@ def Detect(screenshot, image, thresh):
     max_val = 1
     while max_val > threshold:
         min_val, max_val, min_loc, max_loc = cv.minMaxLoc(result)
-        # print('About to append; max_val: ' + str(max_val))
+        print('About to append; max_val: ' + str(max_val))
 
         if max_val > threshold:
             # appending x,y of match to list
@@ -69,8 +69,7 @@ def Detect(screenshot, image, thresh):
             # cv.imshow('123123',result)
             result[max_loc[1] - h // 2 + 4:max_loc[1] + h // 2 + 1, max_loc[0] - w // 2:max_loc[0] + w // 2 + 1] = 0
             # cv.imshow('zxczxc',result)
-            test = cv.rectangle(screenshot, (max_loc[0], max_loc[1]), (max_loc[0] + w + 1, max_loc[1] + h + 1),
-                                (0, 255, 0))
+            test = cv.rectangle(screenshot, (max_loc[0], max_loc[1]), (max_loc[0] + w + 1, max_loc[1] + h + 1), (0, 255, 0))
             # cv.imshow('test',test)
 
             # print('Best match top left position: %s' % str(max_loc))
@@ -78,6 +77,8 @@ def Detect(screenshot, image, thresh):
 
     return MatchedItems
 
+# Size of screenshot must be larger by template/2 in each x,y, since upon match location, we slice result array
+# width/height either side of max_loc to prevent a match from the same object
 
 # Make numbers smaller, do black space doesn't add to match weight
 
