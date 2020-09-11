@@ -2,6 +2,7 @@
 
 #   Press a button to execute this script; requires tarkov open
 
+import tkinter as tk
 import time
 import pyautogui
 import json
@@ -15,6 +16,7 @@ from windowCapture import WindowCapture
 from matchingFunctions import *
 import Functions
 from movement import Movement
+import GUI2
 
 # Importing Curves from Curves.txt
 os.chdir('''C:\\Users\\Philip\\Documents\\Programming\\Opencv\\TarkovAutoSell''')
@@ -80,22 +82,22 @@ clock = pygame.time.Clock()
 # How can matchObject distinguish between different objects of the same template? Will this cause issues?
 # - Can define bounds for FiRitems to be found, search for that bounded area within the stash
 # - Allow user to drag a boundry, use a floor/ceiling functions to stash block corners
+
 # - stashwindow will be need to recaptured after an item is sold, or else fleaStash will not match
 # - Will need to adjust threshold on Detect( fleaStash, stashBoundary) to almost 1, to disable matching portions on stash
-# - skipped over match drag screen - why?
+# - threshold cannot be close to 0.9 due to lighting in the background causing differences
+# - Need to detect euros/dollars and either exempt them or convert them
+
 def Menu():
     # Waits for user inputs to select certain variables, here FiRItems dictionary generated
     # and a stash boundry template is generated
-    pass
-    Awaiting = True
-    while Awaiting:
-        clock.tick(60)
-        break
+    GUI2.CreateGui()
 
-    pass
+    print('testing123')
 
 def Main():
     # Need object to act on
+    #create gui object here with A initiated at same time
     A = Movement()
     count = 0                   # item sold count
     Awaiting = True
@@ -103,20 +105,27 @@ def Main():
     # Gradually looping over the item locations in FiR
     if FiRdict == {}:
         print('no objects on screen')
+    #for FiRItem in G.FiRdict:
     for FiRItem in FiRdict:
-        print(id(Functions.Matches))
         Functions.initAndClear()                                         # Clears 'Matches' for new item
-        print(id(Functions.Matches))
         cv.imshow('current template', FiRdict[FiRItem])
         print('Current item: ' + str(FiRItem))
         # Aligning curve x1, to item position, destination 'add offer'
         A.align( (FiRItem[0]+1264,FiRItem[1]+77), (1300, 75), x1)
+
+        # Taking screencap of stashBoundary
+        stashWidth = 4
+        stashHeight = 4
+        wincap = WindowCapture('EscapeFromTarkov')
+        TarkovScreenN = wincap.get_screenshot()
+        stashBoundary = TarkovScreenN[77:77 + 63 * stashHeight, 1264:1264 + 63 * stashWidth]
 
         if count % 3 == 0 and count != 0:  # If 3 items sold, doesn't await user input
             Awaiting = True
 
         f = 0  # Frame count
         # Awaiting for user inputs
+        # This is where GUI goes
         while Awaiting == True:
             clock.tick(60)
 
@@ -176,7 +185,7 @@ def Main():
 
         # Run matching algorithm - objectMatch(fleaStash, stashBoundary), select obj.
         # if false, click on bar, drag down, repeat until match found
-        XX = Detect(fleaStash, stashBoundary, 0.85)
+        XX = Detect(fleaStash, stashBoundary, 0.81)
         if XX == []:
             fleaStashBoundaryLoc = Functions.LocateStashItem(1044, 323, stashBoundary)
         else:
@@ -187,12 +196,12 @@ def Main():
         fleaStashLoc = fleaStashBoundaryLoc[0] + 410, fleaStashBoundaryLoc[1] + 206                 # Adjusted x,y w.r.t fleaStash on screen + offset by 2/2 BotRight
         pyautogui.moveTo(fleaStashLoc[0],fleaStashLoc[1])
         print('stashBoundary at '+str(fleaStashLoc)+' on-screen')
-        time.sleep(5)
+        time.sleep(1) #
 
         # Move to FiRItem location; within the stashBoundary; within the fleaStash
         print(fleaStashLoc[0]+FiRItem[0])
         print(fleaStashLoc[1]+FiRItem[1])
-        time.sleep(10)
+        time.sleep(1) #
         A.MoveTo(pyautogui.position(), (fleaStashLoc[0]+FiRItem[0],fleaStashLoc[1]+FiRItem[1]), x2)
 
         # Click Object
@@ -227,7 +236,7 @@ def Main():
         A.MoveTo(pyautogui.position(), (1274, 893), x2)
         time.sleep(0.1)
 
-        time.sleep(60)
+        time.sleep(1) #
         pyautogui.click(button='left')
         print('item sold')
         pyautogui.press('esc')
@@ -237,8 +246,9 @@ def Main():
         # i.e the detect location in drag
 
         count += 1
-        time.sleep(10)
+        time.sleep(1) #
 Menu()
+time.sleep(30)
 Main()
 
 ' TO DO '
@@ -254,6 +264,7 @@ Main()
 # Allow somehow to grab all prices, then allow a review before selling the items
 # Can't I remove 'Matches' from Functions if I declare it as global within the function?
 # Utilise multi-processing/multi-threading in drag function to match each frame/or other frame whilst dragging down?
+# Drag code is a bit 'iffy' - skipped over match drag screen - when range(2,20)
 
 '''Errors'''
 
