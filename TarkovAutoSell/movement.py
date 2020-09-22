@@ -30,7 +30,8 @@ class Movement():
         self.frame = 0
         self.x = 0
         self.y = 0
-        self.curve = []
+        self.savedCurves = []
+        self.currentCurve = []
         self.recordActive = False
         self.moving = False
         self.active = True
@@ -41,7 +42,7 @@ class Movement():
             # Previous curve deleted, needs to be saved
 
             [x, y] = pygame.mouse.get_pos()
-            self.curve.append([x, y])
+            self.currentCurve.append([x, y])
         if self.recordActive == False:
             pass
 
@@ -54,8 +55,8 @@ class Movement():
             print('Finish recording first')
         if self.recordActive == False:
             i = Movement()  # will this calculate ci ?
-            print(self.curve)
-            i.curve = self.curve
+            print(self.currentCurve)
+            i.currentCurve = self.currentCurve
             KeptCurves.append(i)
             print(KeptCurves)
             print('Curve Kept')
@@ -68,7 +69,7 @@ class Movement():
         '''
         if self.moving == True:
             try:
-                pyautogui.moveTo(((self.curve[self.frame][0]), (self.curve[self.frame][1])))
+                pyautogui.moveTo(((self.currentCurve[self.frame][0]), (self.currentCurve[self.frame][1])))
                 self.frame += 1
             except IndexError:
                 print('Reached end of curve')
@@ -84,7 +85,7 @@ class Movement():
         AllCurves = []
         for i in KeptCurves:
             f = open("Curves.txt", "w+")
-            AllCurves.append(i.curve)
+            AllCurves.append(i.currentCurve)
         print(AllCurves)
         StringCurves = json.dumps(AllCurves)
         f.write(StringCurves)
@@ -97,13 +98,13 @@ class Movement():
         f = open("Curves.txt", "w+")
         count = 1
         for i in KeptCurves:
-            for j in range(len(i.curve)):
+            for j in range(len(i.currentCurve)):
                 if j == 0:
                     f.write('%s\n' % ('Curve' + str(count) + ':'))
                     count += 1
-                print(str(i.curve[j]))
-                f.write('%s\n' % str(i.curve[j]))
-                if j == len(i.curve) - 1:
+                print(str(i.currentCurve[j]))
+                f.write('%s\n' % str(i.currentCurve[j]))
+                if j == len(i.currentCurve) - 1:
                     f.write('\n')
                     # f.write('%s\n' % 'New Curve:')
 
@@ -135,9 +136,9 @@ class Movement():
         xn = np.add(xn0, item)
 
         # We now have xn - array of movement, centered at item
-        self.curve = xn
+        self.currentCurve = xn
         self.dest = dest
-        return self.curve
+        return self.currentCurve
 
     def MoveTo(self, start, dest, curve):
         '''

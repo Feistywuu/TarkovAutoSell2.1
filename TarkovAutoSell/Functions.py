@@ -98,11 +98,12 @@ def GetValue():
 
 def Drag(x, y, currentItem):
     pyautogui.moveTo(x, y, )
-    pyautogui.drag(0, 150, 1, button='left')
+    pyautogui.drag(0, 100, 1, button='left')
     print('Dragged')
     cap = WindowCapture('EscapeFromTarkov')
     stashScreenCap = cap.get_screenshot()
     stashScreen = stashScreenCap[54:1086, 258:1189]
+    #stashScreen = stashScreenCap[0:1200, 100:1300]
     cv.imshow('test', stashScreen)
     XX = Detect(stashScreen, currentItem, 0.81)
     print(XX)
@@ -114,10 +115,10 @@ def LocateStashItem(x, y, currentItem):
 
     for i in range(1, 20):
 
-        if i == 5:
-            time.sleep(10)          # loop fail-safe
+        if i == 9:
+            time.sleep(30)          # loop fail-safe
         if firstDrag == []:
-            dragY = Drag(x, y + 150 * i, currentItem)
+            dragY = Drag(x, y + 100 * i, currentItem)
 
             if dragY != []:
                 return dragY

@@ -5,7 +5,7 @@ import cv2 as cv
 import numpy as np
 import time
 
-os.chdir('''C:\\Users\\Philip\\Documents\\Programming\\Opencv\\TarkovAutoSell\\Images''')
+os.chdir(r'''C:\Users\Philip\PycharmProjects\TarkovAutoSell2.1\TarkovAutoSell\Images''')
 
 fir = cv.imread('FiR.png', cv.IMREAD_UNCHANGED)
 
@@ -32,6 +32,8 @@ smolNumbers = [cv.imread('0s.png', cv.IMREAD_UNCHANGED),
                cv.imread('9s.png', cv.IMREAD_UNCHANGED), ]
 
 slash = cv.imread('slash.png', cv.IMREAD_UNCHANGED)
+
+test333 = cv.imread('test3.png', cv.IMREAD_UNCHANGED)
 
 # print(Numbers[1])
 

@@ -49,7 +49,7 @@ t2.text('Equation of Curve Given By:')
 # t3.text(curve)
 
 # Main loop
-def Main():
+def CurveCalc():
     run = True
     while run:
         clock.tick(60)
@@ -92,7 +92,7 @@ def Main():
 
             # Recording with clicks
             if event.type == MOUSEBUTTONDOWN and event.button == 1:
-                c1.curve = []  # is this okay
+                c1.currentCurve = []  # is this okay
                 c1.recordActive = True
             if event.type == MOUSEBUTTONUP and event.button == 1:
                 c1.recordActive = False
@@ -117,8 +117,6 @@ def Main():
 
     pygame.quit()
 
-
-Main()
 
 'Considerations'
 
