@@ -1,6 +1,7 @@
 # GUI for user inputs for main()
 
 import tkinter as tk
+from tkinter import messagebox
 import pyautogui
 import time
 import Functions
@@ -8,7 +9,8 @@ from PIL import Image, ImageTk
 from windowCapture import WindowCapture
 from matchingFunctions import *
 from movement import Movement
-
+import sys
+import json
 ''' Goals '''
 
 # Dropdown box with selection of rules
@@ -30,38 +32,91 @@ from movement import Movement
 #integrate first with dict predetermined
 
 #Display current item
+''' To Do'''
 
-# Can self.stashBoundary change upon self.height,self.width changing upon dropdown select?
+''' ////////////////FOUR THINGS///////////////  '''
 
+''' Have stashBoundary area saved from last use'''
+# Upon 'sell' save self.stashBoundary to settings.txt
+# Program accesses this file and sets attributes equal to settings attributes
+'Issues::::'
+# If settings are inserted into file - IT WORKS                                                     (0)
+# Settings are not saved into file properly -- requires function to end to finish saving**
+# Y not saved properly
+
+''' Drag has to detect in fleaStash at every square, to avoid match with half a square'''           # (2)
+# Moving down 18 in Y, is one square in stash
+# why is it not moving down a square then?
+
+''' When executing, loop 3 times'''                                                                 # (1)
+# Loops, however springs error message 'cannot print all items, not enough item in FiRdict
+# because it detects only 2 items - FIX
+
+''' Account for euros/dollars'''
+# When dollar/euro sign is detected, immediatedly convert detected value to rubles with going rate
+# Thus bid will be placed in rubles, 1 ruble lower than equivalent price.
+
+''' Curve Evolution:
+    - Draw Curves C1,C2,...,Cn.
+    - Define evolution algorithm:
+        - Choose a midpoint XY: before XY, all changes in chosen ordinal direction, will go one way; after XY, 
+          they will go the other way.
+        - Calculate the changes in respective directions, between each curvepoint:
+            - Iterate through x1 > xn
+            - Generate list = {change1, change2,....,changen}
+            - Choose an arbitrary 'midpoint' XY
+            - Modifying each change in list based on weights:
+                - Newchanges = {(newchange1 = change1*randomInt(1-1.11)), newchange2, .... midpoint...m, newchange100 = change100*randomInt(0.89-1.00) .... changen} 
+            - Use newly modified list of changes and apply to original curve C1
+        - Modify each distance change between curvepoints with a randomly generated weight.
+    
+    - On program start, apply evolve to them 10x so each user has unique seed curves - Curves = {c1,c2...}
 '''
-CLICKED 0 39
-CLICKED 987 1077
-'''
-
+''' ////////////////////////////////////////////////////'''
 ''' Required user prep - tarkov screen must be on the stash'''
+''' Only have FiR items within stashBoundary or else match to stash fails'''
+''' don't use top 2 rows of stash atm, threshold cannot accurately get numbers and determine object shape (due to light)'''
 
-''' To DO'''
-# In FiRItems(), assign self.FiRdict ... =
 
-# Issue with detection, why is fleaStash and self.stashBoundary different?
-# Both use the get_screenshot() function.
-# Make test detect() function, some pre-defined screencaps, display and compare them.
+
+# Defining for 16:9 ratio resolutions.
+#self.Xratio = 1264/1920 = 0.6583*
+#self.Yratio = 77/1080 = 0.07130
+#self.XstashUnit = 63/1920 = 0.0328
+#self.YstashUnit = 63/1080 = 0.0583*
+
+# Generalising:
+#ratio =
+
 
 class Gui2:
+
+    Exit = Functions.Exit
 
     def __init__(self, master, movementobject):
         self.master = master
         self.movementobject = movementobject
         self.stashBoundary = []
+        self.XshiftToStash = 1264
+        self.YshiftToStash = 77
         self.FiRdict = [0]                      # defined in firdict func
         self.count = 0
         self.Awaiting = True
         self.stashHeightMin = 0
         self.stashWidthMin = 0
-        self.stashWidthMax = 4      #10
-        self.stashHeightMax = 4     #14
+        self.stashWidthMax = 10
+        self.stashHeightMax = 13
         self.stashimg = []
-        self.currentitem = []                   # set when FiRitems generated
+        self.currentFiRitem = []                 # Position of FiRitem in stash
+        'FiR = pos of items in self.stashBoundary'
+
+        # Load self.stashBoundary settings from 'settings.txt'
+        try:
+            initSettings = open(os.path.join('''C:\\Users\\Philip\\PycharmProjects\\TarkovAutoSell2.1\\TarkovAutoSell''', 'settings.txt'))
+            load1 = json.load(initSettings)
+            self.stashWidthMin, self.stashWidthMax, self.stashHeightMin, self.stashHeightMax = load1[0], load1[1], load1[2], load1[3]
+        except json.decoder.JSONDecodeError:
+            print('First time run, using default self.stashBoundary settings')
 
         # Main background window
         self.canvas = tk.Canvas(self.master, width=940, height=1000)
@@ -194,40 +249,11 @@ class Gui2:
         self.top1 = tk.Button(text='Up', command=Up)
         self.canvas.create_window(200, 220, window=self.top1)
         self.bot2 = tk.Button(text='Down', command=Down)
-        self.canvas.create_window(200, 340, window=self.bot2)
+        self.canvas.create_window(200, 320, window=self.bot2)
         self.left1 = tk.Button(text='Left', command=Left)
         self.canvas.create_window(150, 270, window=self.left1)
         self.right1 = tk.Button(text='Right', command=Right)
         self.canvas.create_window(250, 270, window=self.right1)
-
-        # Test Detect() function.
-        def test():
-            '''
-            Shows functions of Detect() function.
-            #1 Test between cv.imshow(fleaStash) and stashBoundary
-            #2
-            :return:
-            '''
-
-            # Errors in detection... then:
-            # Errors loading images, related to image colour swap?
-
-            # First Image
-            test3img = test333[154:600, 350:650]
-            #np.uint8(test3img)
-            test333img = ImageTk.PhotoImage(image=Image.fromarray(test3img))
-            self.canvas.create_image(300, 600, anchor="nw", image=test333img)
-            print(test333img)
-            cv.imshow('tqweaewssdf', test333img)
-
-            ''' LINE 219 image ONLY APPEARS WHEN LINE 221 is there? Why? And then resulting picture is RGB colour swapped?'''
-
-            # Second Image
-            self.testimg = ImageTk.PhotoImage(image=Image.fromarray(self.stashBoundary))
-            self.canvas.create_image(50, 600, anchor="nw", image=self.testimg)
-
-        self.button6 = tk.Button(text='test detect', command=test)
-        self.canvas.create_window(50, 550, window=self.button6)
 
         # Generate stashBoundary Button
         def ScreenCap():
@@ -238,7 +264,8 @@ class Gui2:
             self.stashBoundary = TarkovScreenN[77 + 63 * self.stashHeightMin:77 + 63 * self.stashHeightMax, 1264 + 63 * self.stashWidthMin:1264 + 63 * self.stashWidthMax]
 
             # Convert into displayable form
-            self.stashimg = ImageTk.PhotoImage(image=Image.fromarray(self.stashBoundary))
+            self.stashBoundaryRGB = cv.cvtColor(self.stashBoundary, cv.COLOR_BGR2RGB)
+            self.stashimg = ImageTk.PhotoImage(image=Image.fromarray(self.stashBoundaryRGB))
 
             # Shows self.stashBoundary
             self.canvas.create_image(300, 100, anchor="nw", image=self.stashimg)
@@ -249,45 +276,126 @@ class Gui2:
             Detects FiRitems in user defined self.stashBoundary; Generates self.FiRdict
             :return: self.FiRdict
             '''
+            # Take fresh screencap
+            wincap = WindowCapture('EscapeFromTarkov')
+            TarkovScreenN1 = wincap.get_screenshot()
+
+            # Select portion of screencap chosen by user in UI
+            self.stashBoundary = TarkovScreenN1[
+                                 self.YshiftToStash + 63 * self.stashHeightMin:self.YshiftToStash + 63 * self.stashHeightMax,
+                                 self.XshiftToStash + 63 * self.stashWidthMin:self.XshiftToStash + 63 * self.stashWidthMax]
+
             # Detect FiRItems in stashBoundary
             FiR = Detect(self.stashBoundary, fir, 0.8)
 
-            # Check position of FiR match, then take the containing square as a template
+            # Check position of FiR match within self.stashBoundary, then take the containing square as a template
             # Create dictionary of { ((itempos, itemcap), ... (pos,cap)) }
             self.FiRdict = {}
             for item in FiR:
                 templateX = item[0] + (63 - item[0] % 63)  # Transforming to nearest multiple of 63 above
                 templateY = item[1] + (63 - item[1] % 63)
                 template = self.stashBoundary[templateY - 63:templateY, templateX - 63:templateX]
-                self.FiRdict.update({item: template})
 
-        self.button4 = tk.Button(text='Generate FiR items list', command=FirItems)
+                '''
+                # Require item location on screen, independent of stashBoundary location.
+                self.FiRdict.update({(item[0] + 63*self.stashWidthMin, item[1] + 63 * self.stashHeightMin): template})
+                '''
+
+                # FiR item location within self.stashBoundary
+                self.FiRdict.update({(item[0], item[1]): template})
+
+            # Choosing current FiR item from self.FiRdict
+            try:
+                self.currentFiRitem = list(self.FiRdict)[0]
+                self.FiRdictKeys = list(self.FiRdict.keys())
+                print(self.FiRdictKeys)
+
+                # Converting to displayable form
+                self.currentitem0RGB = cv.cvtColor(self.FiRdict[self.FiRdictKeys[0]], cv.COLOR_BGR2RGB)
+                self.currentitem0 = ImageTk.PhotoImage(image=Image.fromarray(self.currentitem0RGB))
+                self.canvas.create_image(50, 600, anchor="nw", image=self.currentitem0)
+            except IndexError as error:
+                print(error)
+                print('self.FiRdict is empty - there are no FiR items on the screen')
+                #return
+            try:
+                self.currentitem1RGB = cv.cvtColor(self.FiRdict[self.FiRdictKeys[1]], cv.COLOR_BGR2RGB)
+                self.currentitem1 = ImageTk.PhotoImage(image=Image.fromarray(self.currentitem1RGB))
+                self.canvas.create_image(120, 600, anchor="nw", image=self.currentitem1)
+            except IndexError as error:
+                print(error)
+                print('Cannot print all items, not enough items in FiRdict')
+                #return
+            try:
+                self.currentitem2RGB = cv.cvtColor(self.FiRdict[self.FiRdictKeys[2]], cv.COLOR_BGR2RGB)
+                self.currentitem2 = ImageTk.PhotoImage(image=Image.fromarray(self.currentitem2RGB))
+                self.canvas.create_image(190, 600, anchor="nw", image=self.currentitem2)
+            except IndexError as error:
+                print(error)
+                print('Cannot print all items, not enough items in FiRdict')
+                #return
+
+        self.button4 = tk.Button(text='Show current items being sold', command=FirItems)
         self.canvas.create_window(100, 450, window=self.button4)
 
+        # test save button
+        def testsave():
+            # save self.stashBoundary settings to 'settings.txt'
+            os.chdir('''C:\\Users\\Philip\\PycharmProjects\\TarkovAutoSell2.1\\TarkovAutoSell''')
+            stashSettings = [self.stashWidthMin, self.stashWidthMax, self.stashHeightMin, self.stashWidthMax]
+            f = open("settings.txt", "w+")
+            stashSettings = json.dumps(stashSettings)
+            f.write(stashSettings)
+            print(stashSettings)
+            print('Settings Saved')
+
+        self.buttonTest = tk.Button(text='Save Boundary', command=testsave)
+        self.canvas.create_window(330, 50, window=self.buttonTest)
+
         # Execute button
+        def SellThrice():
+            # save self.stashBoundary settings to 'settings.txt'
+            os.chdir('''C:\\Users\\Philip\\PycharmProjects\\TarkovAutoSell2.1\\TarkovAutoSell''')
+            stashSettings = [self.stashWidthMin, self.stashWidthMax, self.stashHeightMin, self.stashWidthMax]
+            f = open("settings.txt", "w+")
+            stashSettings = json.dumps(stashSettings)
+            f.write(stashSettings)
+            print(stashSettings)
+            print('Settings Saved')
+
+            # Sell algorithm 3 times
+            SellItem()
+            SellItem()
+            SellItem()
+
         def SellItem():
             '''
-            Takes a new Screenshot of stashBoundary - generates self.FiRdict, self.FiRItem, self.stashBoundary and
-            self.currentItem. Then, self.count += 1
-            :return: Item is sold
+            Takes a screenshot of stashBoundary - generates self.FiRdict and self.currentItem.
+            Sells item, then self.count += 1
+            :return: Item is sold, self.count += 1
             '''
 
-
-            # Choosing a FiR item
-            self.FiRItem = list(self.FiRdict)[self.count]
-            print(self.FiRItem)
+            # Generates self.FiRdict from self.stashBoundary
+            FirItems()
 
             # Moving to FiRitem
-            pyautogui.moveTo(self.FiRItem[0] + 1264, self.FiRItem[1] + 77, 2)   # Moving to FiR item
-            pyautogui.click(button='right')                                     # Open 'filter by item'
-            pyautogui.move(10, -78, 0.5)
+            pyautogui.moveTo(self.currentFiRitem[0] + self.XshiftToStash + self.stashWidthMin*63, self.currentFiRitem[1] +
+                             self.YshiftToStash + self.stashHeightMin*63, 2)     # Moving to FiR item
+            time.sleep(0.1)
+            pyautogui.click(button='right')                                                     # Open item dropdown
+            pyautogui.move(10, 55, 0.5)
             time.sleep(1)
-            pyautogui.click(button='left')                                      # Clicks it
+            if self.currentFiRitem[0] + self.XshiftToStash + self.stashWidthMin*63 >= 1675:     # Depending on pos in stash, moves to filter in dropdown
+                pyautogui.move(-40, 0, 0.5)
+            else:
+                pyautogui.move(140, 0, 0.5)
+            time.sleep(1)
+            pyautogui.click(button='left')                                                      # Clicks it
             time.sleep(1)
             self.movementobject.moving = True
 
             # Moving from 'filter by item' > 'add offer'
-            self.movementobject.MoveTo((self.FiRItem[0] + 1254, self.FiRItem[1] - 1), (1300, 75), self.movementobject.savedCurves[0])
+            self.movementobject.MoveTo((self.currentFiRitem[0] + self.XshiftToStash - 10, self.currentFiRitem[1] + self.YshiftToStash - 1), (1300, 75), self.movementobject.savedCurves[0])
 
             # Calculating values from listings
             Functions.GetValue()
@@ -311,25 +419,30 @@ class Gui2:
             else:
                 fleaStashBoundaryLoc = XX
 
+            # Allows for exit if error in matching fleaStash - Maybe making this a second thread running all the time?
+            if self.Exit == True:
+                messagebox.showerror("WHAT HAVE YOU DONE", "take the non FiR items out of your stash area u beautiful numbnut"
+                                                           "(couldn't find your items in the fleamarketStash)")
+                return
+
             # Move to stashBoundary match within fleaStash
-            fleaStashBoundaryLoc = fleaStashBoundaryLoc[0][0] - 150, fleaStashBoundaryLoc[0][
-                1] - 150  # Adjusting for x,y, w.r.t fleaStash
-            fleaStashLoc = fleaStashBoundaryLoc[0] + 410, fleaStashBoundaryLoc[
-                1] + 206  # Adjusted x,y w.r.t fleaStash on screen + offset by 2/2 BotRight
+            fleaStashBoundaryLoc = fleaStashBoundaryLoc[0][0] - 150, fleaStashBoundaryLoc[0][1] - 150                       # Adjusting for x,y, w.r.t fleaStash
+            fleaStashLoc = fleaStashBoundaryLoc[0] + 410, fleaStashBoundaryLoc[1] + 206                                     # Adjusted x,y, w.r.t fleaStash on screen + offset by 2/2 BotRight
             pyautogui.moveTo(fleaStashLoc[0], fleaStashLoc[1])
             print('stashBoundary at ' + str(fleaStashLoc) + ' on-screen')
-            time.sleep(1)  #
+            time.sleep(2)  #
 
             # Move to FiRItem location; within the stashBoundary; within the fleaStash
-            print(fleaStashLoc[0] + self.FiRItem[0])
-            print(fleaStashLoc[1] + self.FiRItem[1])
-            time.sleep(1)  #
+            print(self.currentFiRitem)
+            print(fleaStashLoc[0] + self.currentFiRitem[0])
+            print(fleaStashLoc[1] + self.currentFiRitem[1])
+            time.sleep(10)  #
             self.movementobject.MoveTo(pyautogui.position(),
-                                       (fleaStashLoc[0] + self.FiRItem[0], fleaStashLoc[1] + self.FiRItem[1]),
+                                       (fleaStashLoc[0] + self.currentFiRitem[0], fleaStashLoc[1] + self.currentFiRitem[1]),
                                        self.movementobject.savedCurves[1])
 
             # Click Object
-            time.sleep(0.1)
+            time.sleep(1)
             pyautogui.click(button='left')
 
             # Creating loop for movement to '+'
@@ -371,7 +484,7 @@ class Gui2:
             self.count += 1
             time.sleep(1)  #
 
-        self.button3 = tk.Button( text='Execute', command=SellItem)
+        self.button3 = tk.Button( text='Execute', command=SellThrice)
         self.canvas.create_window(250, 50, window=self.button3)
 
         # Generates and shows boundary on init.
@@ -422,3 +535,5 @@ class Gui2:
         self.entry1 = tk.Entry(self.master)
         self.canvas.create_window(100, 140, window=self.entry1)
 '''
+
+

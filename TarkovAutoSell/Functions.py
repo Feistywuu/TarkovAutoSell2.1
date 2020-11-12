@@ -5,6 +5,9 @@ import pyautogui
 import numpy as np
 from matchingFunctions import *
 from windowCapture import WindowCapture
+from win32api import GetCursorPos
+
+Exit = False
 
 Matches = [[],
            [],
@@ -64,7 +67,7 @@ def GetValue():
     for i in range(len(listings)):
         for j in range(len(Numbers)):
             # print('Listing: ' + str(i) + '  Number: ' + str(j))
-            B = Detect(listings[i], Numbers[j], 0.8)
+            B = Detect(listings[i], Numbers[j], 0.85)
 
             # Making Match objects from Detect() list output
             for match in B:
@@ -98,7 +101,7 @@ def GetValue():
 
 def Drag(x, y, currentItem):
     pyautogui.moveTo(x, y, )
-    pyautogui.drag(0, 100, 1, button='left')
+    pyautogui.drag(0, 18, 0.3, button='left')
     print('Dragged')
     cap = WindowCapture('EscapeFromTarkov')
     stashScreenCap = cap.get_screenshot()
@@ -112,13 +115,20 @@ def Drag(x, y, currentItem):
 
 def LocateStashItem(x, y, currentItem):
     firstDrag = Drag(x, y, currentItem)
+    XX, YY = GetCursorPos()
+    print ('at y pos {}'.format(YY))
 
-    for i in range(1, 20):
+    for i in range(1, 30):
 
-        if i == 9:
-            time.sleep(30)          # loop fail-safe
+        if i == 15:
+            # Failsafe if no match in fleaStash
+            global Exit
+            Exit = True
+            break
         if firstDrag == []:
-            dragY = Drag(x, y + 100 * i, currentItem)
+            dragY = Drag(x, y + 18 * i, currentItem)
+            XX, YY = GetCursorPos()
+            print ('at y pos {}'.format(YY))
 
             if dragY != []:
                 return dragY

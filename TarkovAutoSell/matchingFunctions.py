@@ -20,6 +20,8 @@ Numbers = [cv.imread('0.png', cv.IMREAD_UNCHANGED),
            cv.imread('8.png', cv.IMREAD_UNCHANGED),
            cv.imread('9.png', cv.IMREAD_UNCHANGED), ]
 
+print(Numbers[0].dtype)
+
 smolNumbers = [cv.imread('0s.png', cv.IMREAD_UNCHANGED),
                cv.imread('1s.png', cv.IMREAD_UNCHANGED),
                cv.imread('2s.png', cv.IMREAD_UNCHANGED),
@@ -51,11 +53,17 @@ def Detect(screenshot, image, thresh):
     '''
     threshold = thresh
     MatchedItems = []
-    # Dropping alpha channel on image, making C_CONTIGUOUS
+    # dropping alpha channel on image, making C_CONTIGUOUS
     image = image[..., :3]
     image = np.ascontiguousarray(image)
     h, w = image.shape[:2]
-    result = cv.matchTemplate(screenshot, image, cv.TM_CCOEFF_NORMED)
+
+    # Setting both images to grayscale
+    screenshotGray = cv.cvtColor(screenshot, cv.COLOR_BGR2GRAY)
+    imageGray = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    result = cv.matchTemplate(screenshotGray, imageGray, cv.TM_CCOEFF_NORMED)
+    #cv.imshow('big spoon', screenshotGray)
+    #cv.imshow('little spoon', imageGray)
 
     # fake out max_val for first run through loop
     max_val = 1
