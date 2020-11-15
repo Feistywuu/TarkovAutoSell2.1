@@ -34,29 +34,16 @@ import json
 #Display current item
 ''' To Do'''
 
-''' ////////////////FOUR THINGS///////////////  '''
+''' ////////////////THREE THINGS///////////////  '''
 
-''' Have stashBoundary area saved from last use'''
-# Upon 'sell' save self.stashBoundary to settings.txt
-# Program accesses this file and sets attributes equal to settings attributes
-'Issues::::'
-# If settings are inserted into file - IT WORKS                                                     (0)
-# Settings are not saved into file properly -- requires function to end to finish saving**
-# Y not saved properly
-
-''' Drag has to detect in fleaStash at every square, to avoid match with half a square'''           # (2)
-# Moving down 18 in Y, is one square in stash
-# why is it not moving down a square then?
-
-''' When executing, loop 3 times'''                                                                 # (1)
-# Loops, however springs error message 'cannot print all items, not enough item in FiRdict
-# because it detects only 2 items - FIX
-
-''' Account for euros/dollars'''
+''' Account for euros/dollars'''                                                                    # (0)
 # When dollar/euro sign is detected, immediatedly convert detected value to rubles with going rate
 # Thus bid will be placed in rubles, 1 ruble lower than equivalent price.
 
-''' Curve Evolution:
+# Checks entire listing area for match with euro/dollar/rubles
+# Simply times the value by multiplier given by thing
+
+''' Curve Evolution:                                                                                # (1)
     - Draw Curves C1,C2,...,Cn.
     - Define evolution algorithm:
         - Choose a midpoint XY: before XY, all changes in chosen ordinal direction, will go one way; after XY, 
@@ -102,9 +89,9 @@ class Gui2:
         self.FiRdict = [0]                      # defined in firdict func
         self.count = 0
         self.Awaiting = True
-        self.stashHeightMin = 0
         self.stashWidthMin = 0
         self.stashWidthMax = 10
+        self.stashHeightMin = 0
         self.stashHeightMax = 13
         self.stashimg = []
         self.currentFiRitem = []                 # Position of FiRitem in stash
@@ -342,7 +329,7 @@ class Gui2:
         def testsave():
             # save self.stashBoundary settings to 'settings.txt'
             os.chdir('''C:\\Users\\Philip\\PycharmProjects\\TarkovAutoSell2.1\\TarkovAutoSell''')
-            stashSettings = [self.stashWidthMin, self.stashWidthMax, self.stashHeightMin, self.stashWidthMax]
+            stashSettings = [self.stashWidthMin, self.stashWidthMax, self.stashHeightMin, self.stashHeightMax]
             f = open("settings.txt", "w+")
             stashSettings = json.dumps(stashSettings)
             f.write(stashSettings)
@@ -398,6 +385,7 @@ class Gui2:
             self.movementobject.MoveTo((self.currentFiRitem[0] + self.XshiftToStash - 10, self.currentFiRitem[1] + self.YshiftToStash - 1), (1300, 75), self.movementobject.savedCurves[0])
 
             # Calculating values from listings
+            print(Functions.Matches)
             Functions.GetValue()
 
             # Click 'add offer'
@@ -430,13 +418,13 @@ class Gui2:
             fleaStashLoc = fleaStashBoundaryLoc[0] + 410, fleaStashBoundaryLoc[1] + 206                                     # Adjusted x,y, w.r.t fleaStash on screen + offset by 2/2 BotRight
             pyautogui.moveTo(fleaStashLoc[0], fleaStashLoc[1])
             print('stashBoundary at ' + str(fleaStashLoc) + ' on-screen')
-            time.sleep(2)  #
+            time.sleep(10)  #
 
             # Move to FiRItem location; within the stashBoundary; within the fleaStash
             print(self.currentFiRitem)
             print(fleaStashLoc[0] + self.currentFiRitem[0])
             print(fleaStashLoc[1] + self.currentFiRitem[1])
-            time.sleep(10)  #
+            time.sleep(2)  #
             self.movementobject.MoveTo(pyautogui.position(),
                                        (fleaStashLoc[0] + self.currentFiRitem[0], fleaStashLoc[1] + self.currentFiRitem[1]),
                                        self.movementobject.savedCurves[1])

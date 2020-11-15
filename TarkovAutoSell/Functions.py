@@ -52,6 +52,23 @@ def GetValue():
     for listings, object matches number templates with the listings,
 
     '''
+
+    # clear 'Matches' variable
+    global Matches
+    Matches = [[],
+               [],
+               [],
+               [],
+               [],
+               [],
+               [],
+               [],
+               [],
+               [],
+               [],
+               [],
+               [], ]
+
     # Takes screencap of listings, then determines the value
     cap = WindowCapture('EscapeFromTarkov')
     capn = cap.get_screenshot()
@@ -62,6 +79,11 @@ def GetValue():
     for i in range(0, 13):
         listing = capn[155 + 72 * i:190 + 72 * i, 1341:1487]
         listings.append(listing)
+
+    # Create Match instances
+    # Detect currency type; attribute to intstance
+    for i in range(len(listing)):
+        type = Detect(listings[i], CurrencyTypes)
 
     # Iterating through Numbers for each Listing; detecting
     for i in range(len(listings)):
@@ -99,14 +121,12 @@ def GetValue():
         print('totalValue: ' + str(row))
 
 
-def Drag(x, y, currentItem):
+def Drag(x, y, ydrag, dragtime, currentItem):
     pyautogui.moveTo(x, y, )
-    pyautogui.drag(0, 18, 0.3, button='left')
-    print('Dragged')
+    pyautogui.drag(0, ydrag, dragtime, button='left')
     cap = WindowCapture('EscapeFromTarkov')
     stashScreenCap = cap.get_screenshot()
     stashScreen = stashScreenCap[54:1086, 258:1189]
-    #stashScreen = stashScreenCap[0:1200, 100:1300]
     cv.imshow('test', stashScreen)
     XX = Detect(stashScreen, currentItem, 0.81)
     print(XX)
@@ -114,11 +134,11 @@ def Drag(x, y, currentItem):
 
 
 def LocateStashItem(x, y, currentItem):
-    firstDrag = Drag(x, y, currentItem)
+    firstDrag = Drag(x, y, 9, 0.5, currentItem)
     XX, YY = GetCursorPos()
     print ('at y pos {}'.format(YY))
 
-    for i in range(1, 30):
+    for i in range(0, 29):
 
         if i == 15:
             # Failsafe if no match in fleaStash
@@ -126,7 +146,7 @@ def LocateStashItem(x, y, currentItem):
             Exit = True
             break
         if firstDrag == []:
-            dragY = Drag(x, y + 18 * i, currentItem)
+            dragY = Drag(x, y + 8 + 19 * i, 20, 1, currentItem)
             XX, YY = GetCursorPos()
             print ('at y pos {}'.format(YY))
 
