@@ -34,16 +34,11 @@ import json
 #Display current item
 ''' To Do'''
 
-''' ////////////////THREE THINGS///////////////  '''
+''' //////////////// TWO THING ///////////////  '''
 
-''' Account for euros/dollars'''                                                                    # (0)
-# When dollar/euro sign is detected, immediatedly convert detected value to rubles with going rate
-# Thus bid will be placed in rubles, 1 ruble lower than equivalent price.
+# How can the Drag:Check process be smoothed out?
 
-# Checks entire listing area for match with euro/dollar/rubles
-# Simply times the value by multiplier given by thing
-
-''' Curve Evolution:                                                                                # (1)
+''' Curve Evolution:                                                                                # (0)
     - Draw Curves C1,C2,...,Cn.
     - Define evolution algorithm:
         - Choose a midpoint XY: before XY, all changes in chosen ordinal direction, will go one way; after XY, 
@@ -371,14 +366,14 @@ class Gui2:
             time.sleep(0.1)
             pyautogui.click(button='right')                                                     # Open item dropdown
             pyautogui.move(10, 55, 0.5)
-            time.sleep(1)
+            time.sleep(0.5)
             if self.currentFiRitem[0] + self.XshiftToStash + self.stashWidthMin*63 >= 1675:     # Depending on pos in stash, moves to filter in dropdown
                 pyautogui.move(-40, 0, 0.5)
             else:
                 pyautogui.move(140, 0, 0.5)
-            time.sleep(1)
+            time.sleep(0.5)
             pyautogui.click(button='left')                                                      # Clicks it
-            time.sleep(1)
+            time.sleep(0.5)
             self.movementobject.moving = True
 
             # Moving from 'filter by item' > 'add offer'
@@ -390,7 +385,7 @@ class Gui2:
 
             # Click 'add offer'
             pyautogui.click(button='left')
-            time.sleep(1)
+            time.sleep(0.5)
 
             # Find stashBoundary in flea market stash
             cap = WindowCapture('EscapeFromTarkov')
@@ -418,25 +413,23 @@ class Gui2:
             fleaStashLoc = fleaStashBoundaryLoc[0] + 410, fleaStashBoundaryLoc[1] + 206                                     # Adjusted x,y, w.r.t fleaStash on screen + offset by 2/2 BotRight
             pyautogui.moveTo(fleaStashLoc[0], fleaStashLoc[1])
             print('stashBoundary at ' + str(fleaStashLoc) + ' on-screen')
-            time.sleep(10)  #
+            time.sleep(0.5)  #
 
             # Move to FiRItem location; within the stashBoundary; within the fleaStash
-            print(self.currentFiRitem)
-            print(fleaStashLoc[0] + self.currentFiRitem[0])
-            print(fleaStashLoc[1] + self.currentFiRitem[1])
-            time.sleep(2)  #
+            time.sleep(0.5)  #
             self.movementobject.MoveTo(pyautogui.position(),
                                        (fleaStashLoc[0] + self.currentFiRitem[0], fleaStashLoc[1] + self.currentFiRitem[1]),
                                        self.movementobject.savedCurves[1])
 
             # Click Object
-            time.sleep(1)
+            time.sleep(0.5)
             pyautogui.click(button='left')
 
             # Creating loop for movement to '+'
             self.movementobject.MoveTo(pyautogui.position(), (1462, 500), self.movementobject.savedCurves[1])
 
             # Click it, Moving to 'Currency', clicking it
+            time.sleep(0.5)
             pyautogui.click(button='left')
             self.movementobject.MoveTo(pyautogui.position(), (996, 197), self.movementobject.savedCurves[0])
             time.sleep(0.1)
@@ -460,7 +453,7 @@ class Gui2:
             self.movementobject.MoveTo(pyautogui.position(), (1274, 893), self.movementobject.savedCurves[1])
             time.sleep(0.1)
 
-            time.sleep(1)  #
+            time.sleep(10)  #
             pyautogui.click(button='left')
             print('item sold')
             pyautogui.press('esc')
@@ -470,7 +463,7 @@ class Gui2:
             # i.e the detect location in drag
 
             self.count += 1
-            time.sleep(1)  #
+            time.sleep(0.5)  #
 
         self.button3 = tk.Button( text='Execute', command=SellThrice)
         self.canvas.create_window(250, 50, window=self.button3)

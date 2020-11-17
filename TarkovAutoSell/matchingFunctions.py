@@ -9,7 +9,8 @@ os.chdir(r'''C:\Users\Philip\PycharmProjects\TarkovAutoSell2.1\TarkovAutoSell\Im
 
 fir = cv.imread('FiR.png', cv.IMREAD_UNCHANGED)
 
-CurrencyTypes = []
+CurrencyTypes = [cv.imread('dollar.png', cv.IMREAD_UNCHANGED),
+                 cv.imread('euro.png', cv.IMREAD_UNCHANGED)]
 
 Numbers = [cv.imread('0.png', cv.IMREAD_UNCHANGED),
            cv.imread('1.png', cv.IMREAD_UNCHANGED),

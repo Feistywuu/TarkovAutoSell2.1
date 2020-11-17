@@ -80,10 +80,30 @@ def GetValue():
         listing = capn[155 + 72 * i:190 + 72 * i, 1341:1487]
         listings.append(listing)
 
-    # Create Match instances
-    # Detect currency type; attribute to intstance
-    for i in range(len(listing)):
-        type = Detect(listings[i], CurrencyTypes)
+    cap = WindowCapture('EscapeFromTarkov')                         # might be redundant, need to test
+    capn1 = cap.get_screenshot()
+
+    listings1 = []
+    for i in range(0,13):
+        listing1CurrencySign = capn1[155 + 72 * i:190 + 72 * i, 1370:1480]
+        listings1.append(listing1CurrencySign)
+
+    # Detect currency type for each listing, store in list
+    ListingCurrency = []
+    for i in range(len(listings1)):
+        for j in range(len(CurrencyTypes)):
+            print('Currently on listing: ' + str(i) + '. Checking for Currency ' + str(j))
+            currencyDetect = Detect(listings1[i], CurrencyTypes[j], 0.85)
+            if currencyDetect == []:
+                ListingCurrency.append('Ruble')
+                continue
+            if currencyDetect != [] and j == 0:
+                ListingCurrency.append('Dollar')
+                print('dollar listing detected at {}'.format(currencyDetect))
+                continue
+            if currencyDetect != [] and j == 1:
+                ListingCurrency.append('Euro')
+                print('euro listing detected at {}'.format(currencyDetect))
 
     # Iterating through Numbers for each Listing; detecting
     for i in range(len(listings)):
@@ -96,7 +116,7 @@ def GetValue():
                 matchObject = Match(i, j, match[0], match[1])
                 Matches[i].append(matchObject)
 
-    # Sorting Match objects but Match.x value
+    # determine position of each digit in listing: sorting Matchobjects by match.x
     for listing in Matches:
         input_1 = listing
         list_length = len(listing)
@@ -107,7 +127,7 @@ def GetValue():
         for i in range(len(listing)):
             listing[i] = listing[i].value
 
-    # Determining totalValue and assigning to each listing in Matches
+    # Add each digit together to form a totalValue
     for listing in Matches:
         for i in range(len(listing)):
             if i == 0:
@@ -116,6 +136,15 @@ def GetValue():
                 totalValue = int(str(totalValue) + str(listing[i]))
             if i == range(len(listing))[-1]:
                 Matches[Matches.index(listing)] = totalValue
+
+    # convert currencies
+    for i in range(len(Matches)):
+        if ListingCurrency[i] == 'Dollar':
+            Matches[i] = Matches[i]*125
+            print('Converted from Dollars '+ str(Matches[i]))
+        if ListingCurrency[i] == 'Euro':
+            Matches[i] = Matches[i]*146
+            print('Converted from Euros ' + str(Matches[i]))
 
     for row in Matches:
         print('totalValue: ' + str(row))
@@ -134,7 +163,7 @@ def Drag(x, y, ydrag, dragtime, currentItem):
 
 
 def LocateStashItem(x, y, currentItem):
-    firstDrag = Drag(x, y, 9, 0.5, currentItem)
+    firstDrag = Drag(x, y, 9, 0.1, currentItem)
     XX, YY = GetCursorPos()
     print ('at y pos {}'.format(YY))
 
@@ -146,7 +175,7 @@ def LocateStashItem(x, y, currentItem):
             Exit = True
             break
         if firstDrag == []:
-            dragY = Drag(x, y + 8 + 19 * i, 20, 1, currentItem)
+            dragY = Drag(x, y + 8 + 19 * i, 20, 0.2, currentItem)
             XX, YY = GetCursorPos()
             print ('at y pos {}'.format(YY))
 
