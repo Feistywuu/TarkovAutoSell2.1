@@ -11,34 +11,15 @@ from matchingFunctions import *
 from movement import Movement
 import sys
 import json
-''' Goals '''
 
-# Dropdown box with selection of rules
-# Entry boxes to enter variables for chosen rules
-
-# Do I want GUI still open during main loop?
-# If so: insert gui main loop into main() and replace pygame events with user input in GUI
-
-# do i have to create a GUI object each time it changes firitem?
-# no: place dictionary within creategui class
-# - Create button which generates the FiRItems dictionary within gui class
-# dictionary are unordered, so count should change which location is chosen rather than index of dictionary
-
-#make x1,x2 attributes of movement class
-# Make button: opens screen where you can draw the curve, then append to attribute A.savedCurves
-# for now hardcoded
-
-# firdict can be generated with a button later, as opposed to on init.
-#integrate first with dict predetermined
-
-#Display current item
 ''' To Do'''
 
-''' //////////////// TWO THING ///////////////  '''
-
-# How can the Drag:Check process be smoothed out?
+''' //////////////// THREE THINGS ///////////////  '''
 
 ''' Curve Evolution:                                                                                # (0)
+
+    - Pool of Curves = {c1,c2,.....cn}
+    - Randomly choose one whenever a mouse movement is executed
     - Draw Curves C1,C2,...,Cn.
     - Define evolution algorithm:
         - Choose a midpoint XY: before XY, all changes in chosen ordinal direction, will go one way; after XY, 
@@ -52,8 +33,24 @@ import json
             - Use newly modified list of changes and apply to original curve C1
         - Modify each distance change between curvepoints with a randomly generated weight.
     
-    - On program start, apply evolve to them 10x so each user has unique seed curves - Curves = {c1,c2...}
+    - On program start, apply evolve to them 10x so each user has unique seed curves - Curves = {c1,c2...} 
 '''
+# Movement destinations can be any random number within a boundary; Use this boundary for start of next mouse movement
+# Scale the 'Evolved Curve' to the new start and destination.
+# For 'human overshoot' let destination be 'random num. + overshoot' then move to 'random num'
+
+''' Smoothing Drag ---- Multi-threading '''
+
+# How can the Drag:Check process be smoothed out?                                                   (1)
+# Determine where most time is spent processing for screencap() and Detect()
+
+# Use multithreading to smoothen drag:                                                              (2)
+# One process will drag, at periods like a square/2 squares, take screencap and boolean to activate other thread
+# first process will continue moving
+# second process will Detect(), upon matchL:
+# both processes end - Then moves to firitem in fleaStash
+
+
 ''' ////////////////////////////////////////////////////'''
 ''' Required user prep - tarkov screen must be on the stash'''
 ''' Only have FiR items within stashBoundary or else match to stash fails'''
