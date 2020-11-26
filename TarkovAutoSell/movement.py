@@ -6,6 +6,11 @@ import os
 import pygame
 import pyautogui
 import numpy as np
+import Functions
+import random
+import operator
+import math
+import statistics
 
 pyautogui.FAILSAFE = False
 pyautogui.PAUSE = 0
@@ -24,6 +29,8 @@ KeptCurves = []
 
 # maybe should be stored in a list, if wanted to refer to all
 
+# check statistics.median_grouped()
+
 class Movement():
 
     def __init__(self):
@@ -35,6 +42,13 @@ class Movement():
         self.recordActive = False
         self.moving = False
         self.active = True
+        self.startingPos = (0, 0)
+        self.RNGdistance = (0, 0)
+        self.RNGrolls = []                                          # List of all RNG rolls through mouse movements
+        self.startingPositions = []                                 # List of all curve starting positions
+
+        # position booleans
+        self.FilterByItemPos = False
 
     def record(self):
 
@@ -157,5 +171,185 @@ class Movement():
             if self.moving == False and pyautogui.position() == self.dest:
                 print('Moved and reached')
                 break
+
+
+    def MoveToRandom(self, start, curve, nonrngXYdistance, xrange, yrange):
+        '''
+        Uses a start defined from last mouse movement, a pre-defined curve and defines a destination.
+        Then moves along such curve.
+        :param nonrngXYdistance: (x,y)
+        :param start: (x,y)
+        :param curve: array
+        :param xrange: range of x co-ordinates - (xmin,xmax)
+        :param yrange: range of y co-ordinates - (ymin,ymax)
+        :return: None. But sets self.startingPos = dest
+        '''
+        self.RNGdistance = Functions.ChooseRandomInt(xrange, yrange)
+        print(self.RNGdistance)
+        self.RNGrolls.append(self.RNGdistance)
+        dest = tuple(map(lambda x, y: x + y, self.RNGdistance, nonrngXYdistance))
+        self.MoveTo(start, dest, curve)
+
+        self.startingPos = dest
+        self.startingPositions.append(self.startingPos)
+
+        # changes position after RNG selection
+        self.PositionRule()
+
+    def PositionRule(self):
+        '''
+        Of the form: 'if bool': ' change destination position '
+        :return:
+        '''
+        # Each rule must be mutually exclusive to not violate self.startingPosition list index selection
+        # though must will act on self.startingPosition[-1] - (latest generated position)
+
+        if self.FilterByItemPos == True and self.RNGrolls[1][0] <= 39:
+            # activates if in left third of 'search' button
+            # 2/3 chance that it reduces NET distance travelled by 2/3
+            print('in the left third')
+            rand = random.randint(0, 2)
+            if rand <= 1:
+                print('FilterByItemPos roll Failed')
+            if rand > 1:
+                print('rolled FilterByItemPos Passed')
+                print(self.RNGdistance)
+                RuleShift1 = tuple(map(lambda x: operator.floordiv(x, (3/2)), self.RNGdistance))
+                print(RuleShift1)
+                print(self.startingPositions[-1])
+                self.startingPositions[-1] = tuple(map(lambda x, y: x - y, self.startingPos[-1], RuleShift1)) # Since RuleShift1 is negative: -(-)
+                print(self.startingPositions[-1])
+
+    # probably doesn't want to be a class method, so that it can work independendlty within the
+    # other multi-processing loop?
+    # Because the main movement object is updated real time as the mouse moves according to it.
+    # Thus the EvolveCurve needs to work on some alternate/dummy variable, maybe dummy.movementobject?
+    def EvolveCurve(self, start, dest, curve, N, X):
+        '''
+        Takes a existing mouse movement (curve in array form) and runs an algorithm on it, altering so that it
+        resembles the original but with slight unpredictable deviations:
+        xyTotal = total number of datapoints in the curve
+        - Choose a value N, where N is 5 >= N >= 1
+        This determines the amount of curve segments.
+        - Calculate deviation for every datapoint on the curve from the straight line segment (start > destination)
+        - For each curve segment, multiply every datapoint position by the deviation factor, governed by:
+        deviationFactor = sum(N)/(N*deviationMedian)
+        - Value will be close to 1. This uses the variability of median vs average to alter values by small but
+        unpredictable amounts.
+        - Repeat above X times (10~)
+        - May require cleaning irregularities in the curve
+        :param curve: array
+        :param start: (x,y)
+        :param dest: (x,y)
+        :param N: int
+        :param X: int
+        :return: array
+        '''
+        # maybe not a good idea to mix np.arrays + tuple lambda operations
+        xyTotal = len(curve)
+
+        # ensure curve starts at [0,0]
+        curve = curve - curve[0]
+
+        # straight line equation
+        def linearEqn(dest, xyTotal):
+            eqn = np.array([])
+            for t in range(xyTotal):
+                np.append(eqn, [math.floor(dest[0]/dest[1])*t, math.floor(dest[1]/dest[0])*t])
+
+            return eqn
+
+        linear = linearEqn(dest, xyTotal)
+        print(linear)
+
+        # iterate over curvepoints, compare to expected curve 'linearEqn'
+        # return delta curve starting at (0,0) - both curves must start at [0,0]
+        deltaList = np.array([])
+        for i in range(len(curve)):
+            deltaN = np.add(-curve[i], linear[i])
+            print(deltaN)
+            deltaNsquared = math.sqrt(math.pow(deltaN[0], 2) + math.pow(deltaN[1], 2))
+            np.append(deltaList, deltaNsquared)
+
+        print(deltaList)
+
+        # calculate deviations from deltaList
+        #(1)
+        deviationList = []
+        N = random.randint(2, 5)
+        remainder = xyTotal % N
+        print(remainder)
+        for n in range(0, N):
+            k = random.randint(0, 1)
+            deltaNSum = 0
+            deltaNMedian = []
+            # add remainder term on last segment
+            if n == range(0, N)[-1]:
+                for m in range(math.floor(xyTotal / N) * n, math.floor(xyTotal / N) * (n + 1) + remainder):
+                    # sum of deltaN[m] in range
+                    deltaNSum += deltaList[m]
+
+                    # median of deltaN[m] in range
+                    deltaNMedian = deltaNMedian.append(deltaList[m])
+                    deltaNMedian = statistics.median_grouped(deltaNMedian)
+
+                    # more chaos, depend floor/ceil of median on coinflip
+                    if k == 0:
+                        deltaNMedian = math.floor(deltaNMedian)
+                    if k == 1:
+                        deltaNMedian = math.ceil(deltaNMedian)
+            else:
+                for m in range(math.floor(xyTotal/N)*n, math.floor(xyTotal/N)*(n+1)):
+                    # sum of deltaN[m] in range
+                    deltaNSum += deltaList[m]
+
+                    # median of deltaN[m] in range
+                    deltaNMedian = deltaNMedian.append(deltaList[m])
+                    deltaNMedian = statistics.median_grouped(deltaNMedian)
+
+                    # more chaos, depend floor/ceil of median on coinflip
+                    if k == 0:
+                        deltaNMedian = math.floor(deltaNMedian)
+                    if k == 1:
+                        deltaNMedian = math.ceil(deltaNMedian)
+
+            # calculate deviation factor
+            if n == range(0, N)[-1]:
+                deviation = deltaNSum/len(range(0, (math.floor(xyTotal/N)) + remainder))*deltaNMedian
+            else:
+                deviation = deltaNSum/len(range(0, math.floor(xyTotal/N)))*deltaNMedian
+            print(deviation)
+
+            # get delta
+            'here'
+            # work out x,y position from new delta + angle of expected curve
+
+
+            # add new delta to expected curve
+            if n == range(0, N)[-1]:
+                pass
+            else:
+                curve
+
+
+
+
+        # (1) probably more efficient way to include modulo div. remainder in last/random range than?:
+        # calculate xyTotal mod N
+        # add to last m range
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

@@ -11,12 +11,14 @@ from matchingFunctions import *
 from movement import Movement
 import sys
 import json
+from win32api import GetCursorPos
 
 ''' To Do'''
 
 ''' //////////////// THREE THINGS ///////////////  '''
 
-''' Curve Evolution:                                                                                # (0)
+
+''' Curve Evolution:                                                                                # (0.5)
 
     - Pool of Curves = {c1,c2,.....cn}
     - Randomly choose one whenever a mouse movement is executed
@@ -34,14 +36,19 @@ import json
         - Modify each distance change between curvepoints with a randomly generated weight.
     
     - On program start, apply evolve to them 10x so each user has unique seed curves - Curves = {c1,c2...} 
-'''
-# Movement destinations can be any random number within a boundary; Use this boundary for start of next mouse movement
+    
 # Scale the 'Evolved Curve' to the new start and destination.
 # For 'human overshoot' let destination be 'random num. + overshoot' then move to 'random num'
 
+'''
+
+''' Can add all 3 times in the one fleasStash screen, so only 1 drag function required'''              # (1)
+
+# On the very left edge of 4th from right.edge square, filter actually goes to the right
+
 ''' Smoothing Drag ---- Multi-threading '''
 
-# How can the Drag:Check process be smoothed out?                                                   (1)
+# How can the Drag:Check process be smoothed out?                                                   (1.5)
 # Determine where most time is spent processing for screencap() and Detect()
 
 # Use multithreading to smoothen drag:                                                              (2)
@@ -50,6 +57,37 @@ import json
 # second process will Detect(), upon matchL:
 # both processes end - Then moves to firitem in fleaStash
 
+# use multithreading to calculate curve evolution during main process
+
+' For overshot algorithm'                                                                            # (2.5)
+# %chance to retain original RNG destination OR choose a overshot RNG destination - travel to it.
+# Then choose ANOTHER RNG position offshot from ACTUAL RNG destination - travel to it
+# then GENERATE another ACTUAL destination - travel to it
+
+# So most of the time will travel to destination; with a chance to travel to overshoot destination afterwards;
+# then travelling back to the a new destination in the boundary, causing randomness
+# OR
+# will just travel to a misaligned destination to begin with, overshoot that, THEN travel back to the RNG destination
+
+# Make periodically check many items are in up on market, if there is space, run sell algorithm         (3)
+
+# \\\\  Efficiences  //// #
+
+# Create variable drag speed like a human
+# create variable speed in every curve
+# Optimize movement on left/right on 'filter by' choice
+# Things might all be out by 1, because of the randint(range) function - can result in a large change by the end
+# why does mouse sometimes jump?
+# make it learn efficient ways (1000)
+
+# Every time RNG function for boundaries if called, it checks state of all booleans - Can this be more efficient?
+
+''' /// Thoughts '''
+# Originally working with self.RNGdistance - stored all generations in a list for past data access
+# Originally was working with self.startingPos and would write over the same variable over and over,
+# but this would cause readability issues ( moving from self.startingPos > self.startingPos in one function)
+# thus introduced a list to allow distinction between them - Is this good practice? <<<
+# Simply adds 1 line of computation + memory to store list
 
 ''' ////////////////////////////////////////////////////'''
 ''' Required user prep - tarkov screen must be on the stash'''
@@ -70,7 +108,7 @@ import json
 
 class Gui2:
 
-    Exit = Functions.Exit
+    Exit = False
 
     def __init__(self, master, movementobject):
         self.master = master
@@ -87,6 +125,7 @@ class Gui2:
         self.stashHeightMax = 13
         self.stashimg = []
         self.currentFiRitem = []                 # Position of FiRitem in stash
+        self.SavedStartingPositions = []
         'FiR = pos of items in self.stashBoundary'
 
         # Load self.stashBoundary settings from 'settings.txt'
@@ -357,24 +396,34 @@ class Gui2:
             # Generates self.FiRdict from self.stashBoundary
             FirItems()
 
+            # set initial positions
+            self.movementobject.startingPos = pyautogui.position()
+            self.movementobject.startingPositions.append(self.movementobject.startingPos)
+
             # Moving to FiRitem
-            pyautogui.moveTo(self.currentFiRitem[0] + self.XshiftToStash + self.stashWidthMin*63, self.currentFiRitem[1] +
-                             self.YshiftToStash + self.stashHeightMin*63, 2)     # Moving to FiR item
-            time.sleep(0.1)
+            self.movementobject.MoveToRandom(self.movementobject.startingPositions[0], self.movementobject.savedCurves[0],
+                                             ((self.currentFiRitem[0] + self.XshiftToStash + self.stashWidthMin*63),
+                                             (self.currentFiRitem[1] + self.YshiftToStash + self.stashHeightMin*63)),
+                                             (-47, 14),
+                                             (-47, 14))
+
+            # Moving to FiR item
+            time.sleep(1)
             pyautogui.click(button='right')                                                     # Open item dropdown
-            pyautogui.move(10, 55, 0.5)
+            self.movementobject.MoveToRandom(self.movementobject.startingPositions[1], self.movementobject.savedCurves[0],
+                                             self.movementobject.startingPositions[1],
+                                             (3, 110),
+                                             (45, 54))
+
             time.sleep(0.5)
-            if self.currentFiRitem[0] + self.XshiftToStash + self.stashWidthMin*63 >= 1675:     # Depending on pos in stash, moves to filter in dropdown
-                pyautogui.move(-40, 0, 0.5)
-            else:
-                pyautogui.move(140, 0, 0.5)
+            pyautogui.click(button='left')
             time.sleep(0.5)
-            pyautogui.click(button='left')                                                      # Clicks it
-            time.sleep(0.5)
-            self.movementobject.moving = True
 
             # Moving from 'filter by item' > 'add offer'
-            self.movementobject.MoveTo((self.currentFiRitem[0] + self.XshiftToStash - 10, self.currentFiRitem[1] + self.YshiftToStash - 1), (1300, 75), self.movementobject.savedCurves[0])
+            self.movementobject.MoveToRandom(self.movementobject.startingPositions[2], self.movementobject.savedCurves[0],
+                                             (1145, 64),
+                                             (0, 219),
+                                             (0, 33))
 
             # Calculating values from listings
             print(Functions.Matches)
@@ -384,10 +433,16 @@ class Gui2:
             pyautogui.click(button='left')
             time.sleep(0.5)
 
+            # move to fleaStash dragbar
+            self.movementobject.MoveToRandom(self.movementobject.startingPositions[3], self.movementobject.savedCurves[0],
+                                             (1042, 210),
+                                             (0, 6),
+                                             (0, 227))
+            time.sleep(0.5)
+
             # Find stashBoundary in flea market stash
             cap = WindowCapture('EscapeFromTarkov')
             stashScreenCap = cap.get_screenshot()
-            # fleaStash = stashScreenCap[204:931, 408:1039]
             fleaStash = stashScreenCap[54:1086, 258:1189]
             cv.imshow('test', fleaStash)
 
@@ -395,7 +450,7 @@ class Gui2:
             # if false, click on bar, drag down, repeat until match found
             XX = Detect(fleaStash, self.stashBoundary, 0.81)
             if XX == []:
-                fleaStashBoundaryLoc = Functions.LocateStashItem(1044, 323, self.stashBoundary)
+                fleaStashBoundaryLoc = self.LocateStashItem(1044, 323, self.stashBoundary)
             else:
                 fleaStashBoundaryLoc = XX
 
@@ -405,35 +460,40 @@ class Gui2:
                                                            "(couldn't find your items in the fleamarketStash)")
                 return
 
-            # Move to stashBoundary match within fleaStash
+            # move to FiRItem location; within the stashBoundary; within the fleaStash
             fleaStashBoundaryLoc = fleaStashBoundaryLoc[0][0] - 150, fleaStashBoundaryLoc[0][1] - 150                       # Adjusting for x,y, w.r.t fleaStash
             fleaStashLoc = fleaStashBoundaryLoc[0] + 410, fleaStashBoundaryLoc[1] + 206                                     # Adjusted x,y, w.r.t fleaStash on screen + offset by 2/2 BotRight
-            pyautogui.moveTo(fleaStashLoc[0], fleaStashLoc[1])
+
+            self.movementobject.MoveToRandom(self.movementobject.startingPositions[4], self.movementobject.savedCurves[0],
+                                             (fleaStashLoc[0] + self.currentFiRitem[0],
+                                              fleaStashLoc[1] + self.currentFiRitem[1]),
+                                             (-47, 13),
+                                             (-47, 13))
             print('stashBoundary at ' + str(fleaStashLoc) + ' on-screen')
-            time.sleep(0.5)  #
 
-            # Move to FiRItem location; within the stashBoundary; within the fleaStash
-            time.sleep(0.5)  #
-            self.movementobject.MoveTo(pyautogui.position(),
-                                       (fleaStashLoc[0] + self.currentFiRitem[0], fleaStashLoc[1] + self.currentFiRitem[1]),
-                                       self.movementobject.savedCurves[1])
-
-            # Click Object
+            # click Object
             time.sleep(0.5)
             pyautogui.click(button='left')
 
-            # Creating loop for movement to '+'
-            self.movementobject.MoveTo(pyautogui.position(), (1462, 500), self.movementobject.savedCurves[1])
+            # move to '+'
+            self.movementobject.MoveToRandom(self.movementobject.startingPositions[5], self.movementobject.savedCurves[0],
+                                             (1450,491),
+                                             (0, 29),
+                                             (0, 20))
 
-            # Click it, Moving to 'Currency', clicking it
+            # click it, move to 'Currency', click it
             time.sleep(0.5)
             pyautogui.click(button='left')
-            self.movementobject.MoveTo(pyautogui.position(), (996, 197), self.movementobject.savedCurves[0])
+            self.movementobject.MoveToRandom(self.movementobject.startingPositions[6],
+                                             self.movementobject.savedCurves[0],
+                                             (868, 190),
+                                             (0, 48),
+                                             (0, 9))
             time.sleep(0.1)
             pyautogui.click(button='left')
             time.sleep(0.5)
 
-            # Typing Value - 1
+            # type value - 1
             TheValue = Functions.Matches[0] - 1
             strValue = str(TheValue)
             keys = []
@@ -441,26 +501,36 @@ class Gui2:
                 keys.append(digit)
             pyautogui.write(keys, interval=0.15)
 
-            # Moving to 'add', clicking it
-            self.movementobject.MoveTo(pyautogui.position(), (962, 899), self.movementobject.savedCurves[0])
-            time.sleep(0.1)
+            # move to 'add', click it
+            self.movementobject.MoveToRandom(self.movementobject.startingPositions[7],
+                                             self.movementobject.savedCurves[0],
+                                             (925, 885),
+                                             (0, 70),
+                                             (0, 28))
+            time.sleep(1)
             pyautogui.click(button='left')
 
-            # Moving
-            self.movementobject.MoveTo(pyautogui.position(), (1274, 893), self.movementobject.savedCurves[1])
-            time.sleep(0.1)
+            # move to 'place offer'
+            self.movementobject.MoveToRandom(self.movementobject.startingPositions[8],
+                                             self.movementobject.savedCurves[0],
+                                             (1160, 874),
+                                             (0, 299),
+                                             (-7, 0))
 
-            time.sleep(10)  #
+            time.sleep(0.5)  #
             pyautogui.click(button='left')
             print('item sold')
             pyautogui.press('esc')
             self.Awaiting = False
 
-            # Why is match location on the left side center of FiRItem?
-            # i.e the detect location in drag
+            # append startingPositions list to SavedStartingPositions, clear startingPositions
+            self.SavedStartingPositions.append(self.movementobject.startingPositions)
+            self.movementobject.startingPositions = []
 
             self.count += 1
             time.sleep(0.5)  #
+
+            # end sell loop
 
         self.button3 = tk.Button( text='Execute', command=SellThrice)
         self.canvas.create_window(250, 50, window=self.button3)
@@ -471,7 +541,42 @@ class Gui2:
         # CurveCalc button
         ''' insert '''
 
+    # GUI Methods
+    # ADAPT TO BEING A GUI METHOD - RANDOM MOVE FOR MOVE TO DRAGBAR, NORMAL MOVE AFTERWARDS - CHANGE
 
+    def Drag(self, x, y, ydrag, dragtime, stashboundary):
+        # pyautogui.moveTo(x, y, )
+        pyautogui.drag(0, ydrag, dragtime, button='left')
+        cap = WindowCapture('EscapeFromTarkov')
+        stashScreenCap = cap.get_screenshot()
+        stashScreen = stashScreenCap[54:1086, 258:1189]
+        cv.imshow('test', stashScreen)
+        XX = Detect(stashScreen, stashboundary, 0.81)
+        print(XX)
+        return XX
+
+    def LocateStashItem(self, x, y, stashboundary):
+        firstDrag = self.Drag(x, y, 9, 0.1, stashboundary)
+        XX, YY = GetCursorPos()
+        print('at y pos {}'.format(YY))
+
+        for i in range(0, 29):
+
+            if i == 15:
+                # Failsafe if no match in fleaStash
+                global Exit
+                Exit = True
+                break
+            if firstDrag == []:
+                dragY = self.Drag(x, y + 8 + 19 * i, 20, 0.2, stashboundary)
+                XX, YY = GetCursorPos()
+                print('at y pos {}'.format(YY))
+
+                if dragY != []:
+                    return dragY
+
+            if firstDrag != []:
+                return firstDrag
 
 
 
@@ -515,3 +620,23 @@ class Gui2:
 '''
 
 
+'''
+DEFUNCT: after they changed the inventory dropdown menu
+
+            if self.currentFiRitem[0] + self.XshiftToStash + self.stashWidthMin*63 >= 1646:     # Depending on pos in stash, moves to filter in dropdown
+                # boolean to activate position change rule
+                self.movementobject.FilterByItemPos = True
+                self.movementobject.MoveToRandom(self.movementobject.startingPositions[2], self.movementobject.savedCurves[0],
+                                                 self.movementobject.startingPositions[2],
+                                                 (-150, -107),
+                                                 (0, 0))
+                self.movementobject.FilterByItemPos = False
+
+                # However if there two 'high' rolls to the left,
+                #pyautogui.move(-40, 0, 0.5)
+            else:
+                pass
+                #pyautogui.move(140, 0, 0.5)
+
+
+'''

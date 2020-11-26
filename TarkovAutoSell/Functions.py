@@ -5,9 +5,8 @@ import pyautogui
 import numpy as np
 from matchingFunctions import *
 from windowCapture import WindowCapture
-from win32api import GetCursorPos
+import random
 
-Exit = False
 
 Matches = [[],
            [],
@@ -150,42 +149,6 @@ def GetValue():
         print('totalValue: ' + str(row))
 
 
-def Drag(x, y, ydrag, dragtime, currentItem):
-    pyautogui.moveTo(x, y, )
-    pyautogui.drag(0, ydrag, dragtime, button='left')
-    cap = WindowCapture('EscapeFromTarkov')
-    stashScreenCap = cap.get_screenshot()
-    stashScreen = stashScreenCap[54:1086, 258:1189]
-    cv.imshow('test', stashScreen)
-    XX = Detect(stashScreen, currentItem, 0.81)
-    print(XX)
-    return XX
-
-
-def LocateStashItem(x, y, currentItem):
-    firstDrag = Drag(x, y, 9, 0.1, currentItem)
-    XX, YY = GetCursorPos()
-    print ('at y pos {}'.format(YY))
-
-    for i in range(0, 29):
-
-        if i == 15:
-            # Failsafe if no match in fleaStash
-            global Exit
-            Exit = True
-            break
-        if firstDrag == []:
-            dragY = Drag(x, y + 8 + 19 * i, 20, 0.2, currentItem)
-            XX, YY = GetCursorPos()
-            print ('at y pos {}'.format(YY))
-
-            if dragY != []:
-                return dragY
-
-        if firstDrag != []:
-            return firstDrag
-
-
 def initAndClear():
     '''
     Empties contents of 'Matches'
@@ -207,6 +170,26 @@ def initAndClear():
                [],
                [],
                [], ]
+
+
+def ChooseRandomInt(xrange, yrange):
+    '''
+    Takes ranges of x,y - (xmin,xmax) etc. and chooses a random integer lying within each boundary.
+    :return: (x,y)
+    '''
+    try:
+        xmin, xmax = xrange
+        x = random.randint(xmin, xmax)
+    except ValueError:
+        x = 0
+    try:
+        ymin, ymax = yrange
+        y = random.randint(ymin, ymax)
+    except ValueError:
+        y = 0
+
+    return x, y
+
 
 class Match():
 
