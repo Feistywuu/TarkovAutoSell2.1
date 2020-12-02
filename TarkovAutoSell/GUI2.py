@@ -13,30 +13,23 @@ import sys
 import json
 from win32api import GetCursorPos
 
+# test for curve update loop
+import pygame
+from pygame.locals import *
+
 ''' To Do'''
 
-''' //////////////// THREE THINGS ///////////////  '''
+''' //////////////// THINGS ///////////////  '''
 
+''' Testing Curve Evolution  '''                                                                    # (0.2)
+# Require update loop that records (x,y) to record curves - could use multiprocessing?
 
 ''' Curve Evolution:                                                                                # (0.5)
+# when curve is aligned within evolve, thus running through align again in MoveTo() is redundant, except for cases
+#when a curve isn't evolved first
 
-    - Pool of Curves = {c1,c2,.....cn}
-    - Randomly choose one whenever a mouse movement is executed
-    - Draw Curves C1,C2,...,Cn.
-    - Define evolution algorithm:
-        - Choose a midpoint XY: before XY, all changes in chosen ordinal direction, will go one way; after XY, 
-          they will go the other way.
-        - Calculate the changes in respective directions, between each curvepoint:
-            - Iterate through x1 > xn
-            - Generate list = {change1, change2,....,changen}
-            - Choose an arbitrary 'midpoint' XY
-            - Modifying each change in list based on weights:
-                - Newchanges = {(newchange1 = change1*randomInt(1-1.11)), newchange2, .... midpoint...m, newchange100 = change100*randomInt(0.89-1.00) .... changen} 
-            - Use newly modified list of changes and apply to original curve C1
-        - Modify each distance change between curvepoints with a randomly generated weight.
-    
-    - On program start, apply evolve to them 10x so each user has unique seed curves - Curves = {c1,c2...} 
-    
+# Need to able to test curve evolution
+#make button with a function that tests
 # Scale the 'Evolved Curve' to the new start and destination.
 # For 'human overshoot' let destination be 'random num. + overshoot' then move to 'random num'
 
@@ -538,8 +531,38 @@ class Gui2:
         # Generates and shows boundary on init.
         ScreenCap()
 
-        # CurveCalc button
+        # Curve Evolution button
+        # currently using last saved curve, which is weird
+        def Evolve():
+            # move normally
+            self.movementobject.MoveToRandom((300, 900), self.movementobject.savedCurves[1], (100, -100), (0, 0), (0, 0))
+
+            # move evolved
+            #superGigaCurve = Functions.EvolveCurve(self.movementobject.savedCurves[1], 10)
+            #self.movementobject.MoveToRandom((300, 900), superGigaCurve, (800, -800), (0, 0), (0, 0))
+            pass
+
+        self.button6 = tk.Button(text='EVOLVE!!!!!!!', command=Evolve)
+        self.canvas.create_window(250, 600, window=self.button6)
         ''' insert '''
+
+        # record/play curve buttons
+        def RecordCurve():
+            self.movementobject.recordActive = True
+            # record update loop
+
+        def StopRecord():
+            self.movementobject.recordActive = False
+            self.movementobject.Keep()
+        def PlayCurve():
+            self.movementobject.MoveToRandom((300, 900), self.movementobject.savedCurves[1], (100, -100), (0, 0), (0, 0))
+
+        self.button7 = tk.Button(text='Record', command=RecordCurve)
+        self.canvas.create_window(100, 750, window=self.button7)
+        self.button8 = tk.Button(text='StopRecord', command=StopRecord)
+        self.canvas.create_window(600, 100, window=self.button8)
+        self.button9 = tk.Button(text='StopRecord', command=PlayCurve)
+        self.canvas.create_window(250, 680, window=self.button9)
 
     # GUI Methods
     # ADAPT TO BEING A GUI METHOD - RANDOM MOVE FOR MOVE TO DRAGBAR, NORMAL MOVE AFTERWARDS - CHANGE

@@ -2,7 +2,6 @@
 
 import time
 import json
-import os
 import pygame
 import pyautogui
 import numpy as np
@@ -16,20 +15,14 @@ pyautogui.FAILSAFE = False
 pyautogui.PAUSE = 0
 clock = pygame.time.Clock()
 
-os.chdir('''C:\\Users\\Philip\\Documents\\Programming\\Opencv\\TarkovAutoSell''')
-
-# need to make all methods work on objects and absorb global into class attr.
-# rather than use a global variable like:
-KeptCurves = []
-
-
-# seems better to store objects, rather than use just the x,y, since the
-# objects have that as an attribute, + are needed to store other info
-# as attributes, like rotation, initial x,y(?)
-
-# maybe should be stored in a list, if wanted to refer to all
-
 # check statistics.median_grouped()
+
+#self.currentCurve = last recorded curve
+#self.keptCurves = temporary list of curves saved in session with keep()
+#self.AllCurves = list of saves curves, cleared when save is called
+
+# ATM whenever save() function is called, it sets Allcurves = 0.
+
 
 class Movement():
 
@@ -37,8 +30,9 @@ class Movement():
         self.frame = 0
         self.x = 0
         self.y = 0
-        self.savedCurves = []
         self.currentCurve = []
+        self.KeptCurves = []
+        self.savedCurves = []
         self.recordActive = False
         self.moving = False
         self.active = True
@@ -71,9 +65,25 @@ class Movement():
             i = Movement()  # will this calculate ci ?
             print(self.currentCurve)
             i.currentCurve = self.currentCurve
-            KeptCurves.append(i)
-            print(KeptCurves)
+            self.KeptCurves.append(i)
+            print(self.KeptCurves)
             print('Curve Kept')
+
+    def save(self):
+        '''
+        Saves List of kept movements, codes them with json
+        :return: List[array]
+        '''
+        AllCurves = []
+        for i in self.KeptCurves:
+            f = open("curves.txt", "w+")
+            AllCurves.append(i.currentCurve)
+        print(AllCurves)
+        StringCurves = json.dumps(AllCurves)
+        try:
+            f.write(StringCurves)
+        except UnboundLocalError:
+            print('''Couldn't write to curves.txt, self.currentCurve is empty - hasn't been kept''')
 
     def move(self):
         '''
@@ -90,69 +100,6 @@ class Movement():
                 self.moving = False
         if self.moving == False:
             self.frame = 0  # might not be needed - attribute
-
-    def save(self):
-        '''
-        Saves List of kept movements, codes them with json
-        :return: List[array]
-        '''
-        AllCurves = []
-        for i in KeptCurves:
-            f = open("Curves.txt", "w+")
-            AllCurves.append(i.currentCurve)
-        print(AllCurves)
-        StringCurves = json.dumps(AllCurves)
-        f.write(StringCurves)
-
-    def Oldsave(self):
-        '''
-        Keeps array of last mouse movement
-        :return: List[array]
-        '''
-        f = open("Curves.txt", "w+")
-        count = 1
-        for i in KeptCurves:
-            for j in range(len(i.currentCurve)):
-                if j == 0:
-                    f.write('%s\n' % ('Curve' + str(count) + ':'))
-                    count += 1
-                print(str(i.currentCurve[j]))
-                f.write('%s\n' % str(i.currentCurve[j]))
-                if j == len(i.currentCurve) - 1:
-                    f.write('\n')
-                    # f.write('%s\n' % 'New Curve:')
-
-    def align(self, item, dest, arrayN):
-        '''
-        Takes an existing movement array, shifts it to a startpoint
-        (an FiR item's position),scales it by 'k',to produce a new movement
-        array, reaching the destination 'dest'
-        :param: item(x,y), dest(x,y), arrayN(array)
-        '''
-        # Working out initial shift
-        shiftx = (item[0] - arrayN[0][0])
-        shift = ((item[0] - arrayN[0][0]), (item[1] - arrayN[0][1]))
-
-        # Distance to button, destination of xn
-        dest1 = dest
-        dist1 = ((dest1[0] - item[0]), (dest1[1] - item[1]))
-
-        # Distance to last x1, current destination of x1
-        dest2 = ((arrayN[-1][0]), (arrayN[-1][1]))
-        dist2 = (((arrayN[-1][0]) + shift[0] - item[0]), ((arrayN[-1][1]) + shift[1] - item[1]))
-
-        # Calculating k and x1 array distance, centered at 0
-        k = [(dist1[0] / dist2[0]), (dist1[1] / dist2[1])]
-        distarray = (arrayN + shift - item)
-
-        # Transforming x1 array distance by k, moving back to item
-        xn0 = np.multiply(k, distarray)
-        xn = np.add(xn0, item)
-
-        # We now have xn - array of movement, centered at item
-        self.currentCurve = xn
-        self.dest = dest
-        return self.currentCurve
 
     def MoveTo(self, start, dest, curve):
         '''
@@ -220,129 +167,49 @@ class Movement():
                 self.startingPositions[-1] = tuple(map(lambda x, y: x - y, self.startingPos[-1], RuleShift1)) # Since RuleShift1 is negative: -(-)
                 print(self.startingPositions[-1])
 
-    # probably doesn't want to be a class method, so that it can work independendlty within the
-    # other multi-processing loop?
-    # Because the main movement object is updated real time as the mouse moves according to it.
-    # Thus the EvolveCurve needs to work on some alternate/dummy variable, maybe dummy.movementobject?
-    def EvolveCurve(self, start, dest, curve, N, X):
+    def align(self, item, dest, arrayN):
         '''
-        Takes a existing mouse movement (curve in array form) and runs an algorithm on it, altering so that it
-        resembles the original but with slight unpredictable deviations:
-        xyTotal = total number of datapoints in the curve
-        - Choose a value N, where N is 5 >= N >= 1
-        This determines the amount of curve segments.
-        - Calculate deviation for every datapoint on the curve from the straight line segment (start > destination)
-        - For each curve segment, multiply every datapoint position by the deviation factor, governed by:
-        deviationFactor = sum(N)/(N*deviationMedian)
-        - Value will be close to 1. This uses the variability of median vs average to alter values by small but
-        unpredictable amounts.
-        - Repeat above X times (10~)
-        - May require cleaning irregularities in the curve
-        :param curve: array
-        :param start: (x,y)
-        :param dest: (x,y)
-        :param N: int
-        :param X: int
-        :return: array
+        Takes an existing movement array, shifts it to a startpoint
+        (an FiR item's position),scales it by 'k',to produce a new movement
+        array, reaching the destination 'dest'
+        :param: item(x,y), dest(x,y), arrayN(array)
         '''
-        # maybe not a good idea to mix np.arrays + tuple lambda operations
-        xyTotal = len(curve)
+        # Working out initial shift
+        shiftx = (item[0] - arrayN[0][0])
+        shift = ((item[0] - arrayN[0][0]), (item[1] - arrayN[0][1]))
 
-        # ensure curve starts at [0,0]
-        curve = curve - curve[0]
+        # Distance to button, destination of xn
+        dest1 = dest
+        dist1 = ((dest1[0] - item[0]), (dest1[1] - item[1]))
 
-        # straight line equation
-        def linearEqn(dest, xyTotal):
-            eqn = np.array([])
-            for t in range(xyTotal):
-                np.append(eqn, [math.floor(dest[0]/dest[1])*t, math.floor(dest[1]/dest[0])*t])
+        # Distance to last x1, current destination of x1
+        dest2 = ((arrayN[-1][0]), (arrayN[-1][1]))
+        dist2 = (((arrayN[-1][0]) + shift[0] - item[0]), ((arrayN[-1][1]) + shift[1] - item[1]))
 
-            return eqn
+        # Calculating k and x1 array distance, centered at 0
+        k = [(dist1[0] / dist2[0]), (dist1[1] / dist2[1])]
+        distarray = (arrayN + shift - item)
 
-        linear = linearEqn(dest, xyTotal)
-        print(linear)
+        # Transforming x1 array distance by k, moving back to item
+        xn0 = np.multiply(k, distarray)
+        xn = np.add(xn0, item)
 
-        # iterate over curvepoints, compare to expected curve 'linearEqn'
-        # return delta curve starting at (0,0) - both curves must start at [0,0]
-        deltaList = np.array([])
-        for i in range(len(curve)):
-            deltaN = np.add(-curve[i], linear[i])
-            print(deltaN)
-            deltaNsquared = math.sqrt(math.pow(deltaN[0], 2) + math.pow(deltaN[1], 2))
-            np.append(deltaList, deltaNsquared)
-
-        print(deltaList)
-
-        # calculate deviations from deltaList
-        #(1)
-        deviationList = []
-        N = random.randint(2, 5)
-        remainder = xyTotal % N
-        print(remainder)
-        for n in range(0, N):
-            k = random.randint(0, 1)
-            deltaNSum = 0
-            deltaNMedian = []
-            # add remainder term on last segment
-            if n == range(0, N)[-1]:
-                for m in range(math.floor(xyTotal / N) * n, math.floor(xyTotal / N) * (n + 1) + remainder):
-                    # sum of deltaN[m] in range
-                    deltaNSum += deltaList[m]
-
-                    # median of deltaN[m] in range
-                    deltaNMedian = deltaNMedian.append(deltaList[m])
-                    deltaNMedian = statistics.median_grouped(deltaNMedian)
-
-                    # more chaos, depend floor/ceil of median on coinflip
-                    if k == 0:
-                        deltaNMedian = math.floor(deltaNMedian)
-                    if k == 1:
-                        deltaNMedian = math.ceil(deltaNMedian)
-            else:
-                for m in range(math.floor(xyTotal/N)*n, math.floor(xyTotal/N)*(n+1)):
-                    # sum of deltaN[m] in range
-                    deltaNSum += deltaList[m]
-
-                    # median of deltaN[m] in range
-                    deltaNMedian = deltaNMedian.append(deltaList[m])
-                    deltaNMedian = statistics.median_grouped(deltaNMedian)
-
-                    # more chaos, depend floor/ceil of median on coinflip
-                    if k == 0:
-                        deltaNMedian = math.floor(deltaNMedian)
-                    if k == 1:
-                        deltaNMedian = math.ceil(deltaNMedian)
-
-            # calculate deviation factor
-            if n == range(0, N)[-1]:
-                deviation = deltaNSum/len(range(0, (math.floor(xyTotal/N)) + remainder))*deltaNMedian
-            else:
-                deviation = deltaNSum/len(range(0, math.floor(xyTotal/N)))*deltaNMedian
-            print(deviation)
-
-            # get delta
-            'here'
-            # work out x,y position from new delta + angle of expected curve
-
-
-            # add new delta to expected curve
-            if n == range(0, N)[-1]:
-                pass
-            else:
-                curve
+        # We now have xn - array of movement, centered at item
+        self.currentCurve = xn
+        self.dest = dest
+        return self.currentCurve
 
 
 
+' Notes '
 
-        # (1) probably more efficient way to include modulo div. remainder in last/random range than?:
-        # calculate xyTotal mod N
-        # add to last m range
+# need to make all methods work on objects and absorb global into class attr.
+# rather than use a global variable like:
+# KeptCurves = 0
 
-
-
-
-
-
+# seems better to store objects, rather than use just the x,y, since the
+# objects have that as an attribute, + are needed to store other info
+# as attributes, like rotation, initial x,y(?)
 
 
 

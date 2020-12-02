@@ -191,6 +191,146 @@ def ChooseRandomInt(xrange, yrange):
     return x, y
 
 
+    # probably doesn't want to be a class method, so that it can work independendlty within the
+    # other multi-processing loop?
+    # Because the main movement object is updated real time as the mouse moves according to it.
+    # Thus the EvolveCurve needs to work on some alternate/dummy variable, maybe dummy.movementobject?
+    # CHANGE TO METHOD LATER
+def EvolveCurve(curve, X):
+    '''
+    Takes a existing mouse movement (curve in array form) and runs an algorithm on it, altering so that it
+    resembles the original but with slight unpredictable deviations.
+    Splits the curve into N segments, works out a deviation factor for each segment and then multiplies each
+    respective segment by the factor:
+    xyTotal = total number of datapoints in the curve.
+    - Choose a value N, where N is 5 >= N >= 1
+    This determines the amount of curve segments.
+    - Construct a straight line array (linearEqn) from (start > destination). Find the angle of this array
+    -from the closest anti-clockwise axis.
+    - Calculate distance of every point on 'curve' from 'linearEqn' at iteration 'i'.
+    - Rotate this distance by previous angle - (distance*cos(angle)) - to find component orthogonal to linearEqn
+    - Calculate deviation for this distance metric for each segment.
+    - For each curve segment, multiply every datapoint position by the deviation factor, governed by:
+    deviationFactor = sum(N)/(N*deviationMedian).
+    - Value will be close to 1. This uses the variability in the ratio mean/median to alter values by small but
+    unpredictable amounts.
+    - Repeat above X times (10~)
+    - May require cleaning irregularities in the curve
+    :param curve: array
+    :param X: int
+    :return: array
+    '''
+    # maybe not a good idea to mix np.arrays + tuple lambda operations
+    datapointSum = len(curve)
+
+    # ensure curve starts at [0,0]
+    curve = curve - curve[0]
+    dest = curve[-1]
+
+    # get angle using arc tan, if solution is negative, we add pi/2 giving us the acute angle needed
+    angleEx = math.atan(dest[1] / dest[0])
+    print(angleEx)
+    if angleEx < 0:
+        angleEx += angleEx + math.pi / 2
+        print(angleEx)
+
+    # straight line equation
+    def linearEqn(dest1, datapointSum1):
+        eqn = np.array([])
+
+        for t in range(datapointSum1):
+            np.append(eqn, [math.floor(dest1[0] / dest1[1]) * t, math.floor(dest1[1] / dest1[0]) * t])
+
+        return eqn
+
+    linear = linearEqn(dest, datapointSum)
+    print(linear)
+
+    # repeat evolution X times
+    for iteration in range(0, X):
+
+        # iterate over curvepoints, compare to expected curve 'linearEqn'
+        deltaList = np.array([])
+        for i in range(len(curve)):
+            # return delta curve starting at (0,0)
+            deltaN = np.add(-curve[i], linear[i])
+            print(deltaN)
+            deltaNsquared = math.sqrt(math.pow(deltaN[0], 2) + math.pow(deltaN[1], 2))
+
+            # compute orthogonal component
+            delta = deltaNsquared * math.cos(angleEx)
+            np.append(deltaList, delta)
+
+        print(deltaList)
+        # Now we have have a delta metric in an array, mapped for every point in in curve/linear
+        # calculate deviations from deltaList
+        # (1)
+        deltaArray = np.array([])
+        N = random.randint(2, 5)
+        remainder = datapointSum % N
+        print(remainder)
+
+        # iterate through segments of curve/linear curve
+        for n in range(0, N):
+            k = random.randint(0, 1)
+            deltaNSum = 0
+            deltaNMedian = []
+            # add remainder term on last segment
+            if n == range(0, N)[-1]:
+                # iterate through each datapoint in a segment
+                for m in range(math.floor(datapointSum / N) * n, math.floor(datapointSum / N) * (n + 1) + remainder):
+                    # sum of deltaN[m] in range
+                    deltaNSum += deltaList[m]
+
+                    # median of deltaN[m] in range
+                    deltaNMedian = deltaNMedian.append(deltaList[m])
+                    deltaNMedian = statistics.median_grouped(deltaNMedian)
+
+                    # more chaos, depend floor/ceil of median on coinflip
+                    if k == 0:
+                        deltaNMedian = math.floor(deltaNMedian)
+                    if k == 1:
+                        deltaNMedian = math.ceil(deltaNMedian)
+            else:
+                for m in range(math.floor(datapointSum / N) * n, math.floor(datapointSum / N) * (n + 1)):
+                    # sum of deltaN[m] in range
+                    deltaNSum += deltaList[m]
+
+                    # median of deltaN[m] in range
+                    deltaNMedian = deltaNMedian.append(deltaList[m])
+                    deltaNMedian = statistics.median_grouped(deltaNMedian)
+
+                    # more chaos, depend floor/ceil of median on coinflip
+                    if k == 0:
+                        deltaNMedian = math.floor(deltaNMedian)
+                    if k == 1:
+                        deltaNMedian = math.ceil(deltaNMedian)
+
+            # calculate deviation factor
+            if n == range(0, N)[-1]:
+                deviation = deltaNSum / len(range(0, (math.floor(datapointSum / N)) + remainder)) * deltaNMedian
+            else:
+                deviation = deltaNSum / len(range(0, math.floor(datapointSum / N))) * deltaNMedian
+            print(deviation)
+
+            # times each element in deltaList by deviation factor of each segment, append to deltaArray
+
+            if n == range(0, N)[-1]:
+                for m in range(math.floor(datapointSum / N) * n, math.floor(datapointSum / N) * (n + 1) + remainder):
+                    np.append(deltaArray, deltaList[m] * deviation)
+                    pass
+            else:
+                for m in range(math.floor(datapointSum / N) * n, math.floor(datapointSum / N) * (n + 1)):
+                    np.append(deltaArray, deltaList[m] * deviation)
+            print(deltaArray)
+
+        # add new delta to expected curve
+        curve = np.add(linear, deltaArray)
+
+    # Here we can clean/fit so it is similiar to original curve
+
+    return curve
+
 class Match():
 
     def __init__(self, listing, value, x, y):
