@@ -21,6 +21,7 @@ from pygame.locals import *
 
 ''' //////////////// THINGS ///////////////  '''
 
+' ON IT!!!!!!!!!!!!!!!!!!!!!!!!!'
 ''' Testing Curve Evolution  '''                                                                    # (0.2)
 # Require update loop that records (x,y) to record curves - could use multiprocessing?
 
