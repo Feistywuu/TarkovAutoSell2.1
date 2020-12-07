@@ -21,6 +21,10 @@ from pygame.locals import *
 
 ''' //////////////// THINGS ///////////////  '''
 
+# THE WHOLE MULTIPROCESSING THING
+# SellThrice() needs to be written to account for 2 functions                                        (0.1)
+
+
 ' ON IT!!!!!!!!!!!!!!!!!!!!!!!!!'
 ''' Testing Curve Evolution  '''                                                                    # (0.2)
 # Require update loop that records (x,y) to record curves - could use multiprocessing?
@@ -125,6 +129,9 @@ class Gui2:
         self.currentFiRitem = []                 # Position of FiRitem in stash
         self.SavedStartingPositions = []
         'FiR = pos of items in self.stashBoundary'
+        self.TestBool = True
+
+
 
         # Load self.stashBoundary settings from 'settings.txt'
         try:
@@ -446,11 +453,18 @@ class Gui2:
 
             # Run matching algorithm - objectMatch(fleaStash, stashBoundary), select obj.
             # if false, click on bar, drag down, repeat until match found
-            XX = Detect(fleaStash, self.stashBoundary, 0.81)
-            if XX == []:
-                fleaStashBoundaryLoc = self.LocateStashItem(1044, 323, self.stashBoundary)
-            else:
-                fleaStashBoundaryLoc = XX
+
+            '''Process needs to pause here*****'''
+            '''DETECTION/DRAG FUNCTION NOW IN MAIN.PY'''
+
+
+        self.button3 = tk.Button( text='Execute', command=SellThrice)
+        self.canvas.create_window(250, 50, window=self.button3)
+
+        def SellItem2():
+            '''
+            Second half of SellItem() algorithm, invoked through queue
+            '''
 
             # Allows for exit if error in matching fleaStash - Maybe making this a second thread running all the time?
             if self.Exit == True:
@@ -530,8 +544,8 @@ class Gui2:
 
             # end sell loop
 
-        self.button3 = tk.Button( text='Execute', command=SellThrice)
-        self.canvas.create_window(250, 50, window=self.button3)
+        self.button10 = tk.Button(text='Execute', command=SellItem2)
+        self.canvas.create_window(250, 700, window=self.button10)           # probably not needed (remove later)
 
         # Generates and shows boundary on init.
         ScreenCap()

@@ -52,6 +52,49 @@ def Main():
             # Send information to GUI process
             pass
 
+    # If we have SellItem() and SellItem2() defined in main.py,
+    #when a button is pressed in GUI2, how can we relay that information to main?
+    # either have main + gui in one? or?
+    # root.main() should be running constantly after it is instantiated. Thus, when button is pressed it will
+
+            '''         /////////CURRENT//////////////              '''
+    ''' DragNDetect '''
+    # Define SellItem() in GUI to end at DragnDetect()
+    # Create function that runs when bool() statement is satisfied i.e. 'if Detected == True:'
+    # DragNDetect sends information through Queue to GUI process to invoke() (trigger button) in GUI:
+    # Automatically continues SellItem as the rest of said function
+
+    'DragNDetect sends bool information through Queue to Gui process (root.mainloop()) ' #kaput
+
+    ' TEST QUEUE BUTTON'
+    # event with bool condition, false by default
+    # put bool into Queue
+    # activate button using bool condition
+    # check result
+
+    ' TEST QUEUE + INVOKER() '
+    # button that does something
+    # put button.invoker() into Queue
+    # check result
+
+    def DragNDetect():
+        '''
+        Executes an initial Detect.
+        (1) Process drags down the fleastash, takes screenshot at intervals, sends to Queue and sets event.
+        (2) Process Detects screenshot for self.stashBoundary, upon detect, 'break' process (1).
+
+        (1) is GUI update loop - How to access?
+
+        :return:
+        '''
+
+        XX = Detect(fleaStash, self.stashBoundary, 0.81)
+        if XX == []:
+            fleaStashBoundaryLoc = self.LocateStashItem(1044, 323, self.stashBoundary)
+        else:
+            fleaStashBoundaryLoc = XX
+
+
     # Four processes: main(?), GUI, Detect, Record
 
     # want MoveTo in 'GUI' Process to intiate when condition(bool() is changed to true in 'Detect'))
@@ -63,6 +106,7 @@ def Main():
     #we pass the flag variable around the queue, then it runs function defined in main with functions ref. from imports.
 
     if __name__ == '__main__':
+        queue = multiprocessing.Queue()
         e1 = multiprocessing.Event()
         e2 = multiprocessing.Event()
         DetectProcess = multiprocessing.Process(name='Detect',
