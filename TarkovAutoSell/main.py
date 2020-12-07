@@ -8,6 +8,8 @@ from matchingFunctions import *
 import Functions
 from movement import Movement
 import GUI2
+import multiprocessing
+import time
 
 # Importing Curves from Curves.txt
 os.chdir('''C:\\Users\\Philip\\Documents\\Programming\\Opencv\\TarkovAutoSell''')
@@ -21,26 +23,84 @@ except IndexError:
     print('not 2 saves')
 
 
-# Make stashBoundary user defined - User can drag it
-
-# - stashwindow will be need to recaptured after an item is sold, or else fleaStash will not match
-# - Need to detect euros/dollars and either exempt them or convert them
-
-# How will clicking execute button, execute the function three times until count is 3
-# well we have the execute command, simply make it do it 3 times, one after another
-
-''' menu '''
-# Waits for user inputs to select certain variables, here FiRItems dictionary generated
-    # and a stash boundry template is generated
 
 
 def Main():
-    root = tk.Tk()
-    A = Movement()
-    A.savedCurves.append(x1)
-    A.savedCurves.append(x2)
-    G = GUI2.Gui2(root, A)
-    root.mainloop()
+
+    def WaitThenDetect(e):
+        """Wait for the event to be set before doing anything"""
+        print('wait_for_event: starting')
+        e.wait()
+        print('wait_for_event: e.is_set()->', e.is_set())
+        if e.is_set == True:
+            # receive arguements from GUI
+
+            # Run Detect algorithm
+            detect1 = Detect()
+
+            # Send information to GUI process
+            pass
+
+    def WaitThenRecord(e):
+        """ Wait for the event to be set before doing anything"""
+        print('wait_for_event: starting')
+        e.wait()
+        print('wait_for_event: e.is_set()->', e.is_set())
+        if e.is_set == True:
+            # receive arguments from GUI
+            # Run Record algorithm
+            # Send information to GUI process
+            pass
+
+    # Four processes: main(?), GUI, Detect, Record
+
+    # want MoveTo in 'GUI' Process to intiate when condition(bool() is changed to true in 'Detect'))
+    #could use events instead, since we are only using single processes in parallel
+
+    # May need to use lock to organise access to Detect() output.
+
+    # We can use put() into the Queue() to pass bool information
+    #we pass the flag variable around the queue, then it runs function defined in main with functions ref. from imports.
+
+    if __name__ == '__main__':
+        e1 = multiprocessing.Event()
+        e2 = multiprocessing.Event()
+        DetectProcess = multiprocessing.Process(name='Detect',
+                                                target=WaitThenDetect,
+                                                args=(e1,))
+        RecordProcess = multiprocessing.Process(name='Record',
+                                                target=WaitThenRecord,
+                                                args=(e2,))
+        GUIProcess = multiprocessing.Process(name='GUI')
+
+        # prepare and start GUI process
+        root = tk.Tk()
+        A = Movement()
+        A.savedCurves.append(x1)
+        A.savedCurves.append(x2)
+        G = GUI2.Gui2(root, A)
+        root.mainloop()
+        # GUIProcess.start()                                - Possibly needed? otherwise: Instantiate G makes process
+
+        while True:
+
+            # set Detect process
+            if e1.is_set() == True:
+                DetectProcess.start()
+                # transfer information to GUI
+                # join()
+
+            # set Record Process
+            if e2.is_set() == True:
+                RecordProcess.start()
+                # transfer information to GUI
+                # join()
+
+            #processes may need lock state at first
+            # unlocked when condition is changed.
+            # - How can this be changed from the GUI Process? - they are imported
+
+
 
 
 Main()
@@ -53,7 +113,7 @@ Main()
 # Scale dimensions for any monitor size
 # complete loop
 # Clean up code
-# Take median of last 3 results
+# Take median of last 3 results - let users customize certain rules
 # Make containers(things with a tag) and/or vests/backpacks not eligible
 # Allow somehow to grab all prices, then allow a review before selling the items
 # Can't I remove 'Matches' from Functions if I declare it as global within the function?
@@ -63,6 +123,8 @@ Main()
 '''Errors'''
 
 '''Notes'''
+# Can use multiprocessing to run processes concurrently with the GUI main update loop but how would we without that?
+# maybe when another update loop would be required, save required data, end process and start the other update loop?
 
 # Main loop, calculates shift every time it iterates to item
 # vs calculating all shifts, storing in list and referring to them

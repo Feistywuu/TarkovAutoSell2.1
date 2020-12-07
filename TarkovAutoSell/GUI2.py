@@ -24,6 +24,8 @@ from pygame.locals import *
 ' ON IT!!!!!!!!!!!!!!!!!!!!!!!!!'
 ''' Testing Curve Evolution  '''                                                                    # (0.2)
 # Require update loop that records (x,y) to record curves - could use multiprocessing?
+# Make indepedent - still uses Curve.txt in main.py
+#- if curve.txt is empty, make dummy init curve array
 
 ''' Curve Evolution:                                                                                # (0.5)
 # when curve is aligned within evolve, thus running through align again in MoveTo() is redundant, except for cases
@@ -35,6 +37,8 @@ from pygame.locals import *
 # For 'human overshoot' let destination be 'random num. + overshoot' then move to 'random num'
 
 '''
+# remove curse dependance at start of main                                                              #(1.2)
+# make gui update loop exit properly
 
 ''' Can add all 3 times in the one fleasStash screen, so only 1 drag function required'''              # (1)
 
