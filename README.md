@@ -1,6 +1,8 @@
 # TarkovAutoSell2.1
 
-Heya, this requires EFT (Escape From Tarkov to be open)
+Heya, this was my 2nd practice project after making parts of a tower defence - tower place, mobs, hit collision - the juicy stuff.
+
+This requires EFT (Escape From Tarkov to be open)
 Currently functionally complete, but not to my inital goals.
 
 I made this due to the act of selling stuff to the flea market after every raid is monotonous, formulaic and long - thus a perfect candidate to be automized!
